@@ -1,12 +1,14 @@
-function weightedRiegel(times, fromDist, toDist) {
-    let weights = [1, 0.9, 0.8];
+function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
+    const today = new Date();
     let totalWeightedTime = 0;
     let totalWeight = 0;
 
-    times.forEach((time, idx) => {
-        if(time) {
-            totalWeightedTime += weights[idx] * time * Math.pow((toDist / fromDist), 1.06);
-            totalWeight += weights[idx];
+    timesWithDates.forEach(({time, date}) => {
+        if(time && date){
+            const daysAgo = (today - new Date(date)) / (1000*60*60*24);
+            const weight = 1 / (1 + daysAgo/365); // Más reciente = más peso
+            totalWeightedTime += weight * time * Math.pow((toDist/fromDist), 1.06);
+            totalWeight += weight;
         }
     });
 
@@ -19,9 +21,19 @@ function calculatePredictions() {
     let userTimes = {};
 
     document.querySelectorAll('.distance-group').forEach(group => {
-        let dist = group.getAttribute('data-distance');
-        let inputs = group.querySelectorAll('input');
-        userTimes[dist] = Array.from(inputs).map(input => parseFloat(input.value) || null).filter(Boolean);
+        const dist = parseFloat(group.getAttribute('data-distance'));
+        const inputs = group.querySelectorAll('input');
+        let timesWithDates = [];
+
+        for(let i = 0; i < inputs.length; i += 2) {
+            const time = parseFloat(inputs[i].value);
+            const date = inputs[i+1].value;
+            if(time && date){
+                timesWithDates.push({time, date});
+            }
+        }
+        if(timesWithDates.length > 0)
+            userTimes[dist] = timesWithDates;
     });
 
     let predictions = {};
@@ -31,13 +43,12 @@ function calculatePredictions() {
         
         for(let fromDist in userTimes) {
             if(userTimes[fromDist].length > 0) {
-                predictedTimes.push(parseFloat(weightedRiegel(userTimes[fromDist], fromDist, targetDist)));
+                predictedTimes.push(parseFloat(dateWeightedRiegel(userTimes[fromDist], fromDist, targetDist)));
             }
         }
 
         if(predictedTimes.length > 0) {
-            let bestPrediction = Math.min(...predictedTimes);
-            predictions[distanceNames[idx]] = bestPrediction;
+            predictions[distanceNames[idx]] = Math.min(...predictedTimes);
         }
     });
 
