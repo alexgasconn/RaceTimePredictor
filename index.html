@@ -9,31 +9,12 @@
             font-family: Arial, sans-serif;
             padding: 30px;
             background-color: #f5f5f5;
+            max-width: 800px;
+            margin: auto;
         }
 
         h2 {
             text-align: center;
-        }
-
-        #container {
-            display: flex;
-            justify-content: space-between;
-            gap: 40px;
-        }
-
-        #input-section, #results-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        #input-section {
-            width: 60%;
-        }
-
-        #results-section {
-            width: 35%;
         }
 
         .distance-group {
@@ -41,26 +22,34 @@
         }
 
         .distance-group h4 {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .time-row {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 6px;
+            gap: 12px;
+            margin-bottom: 8px;
         }
 
         .time-row input[type="text"],
         .time-row input[type="date"] {
-            width: 120px;
-            padding: 5px;
+            padding: 6px;
+            width: 150px;
         }
 
         button {
-            padding: 10px 20px;
-            margin-top: 10px;
+            margin-top: 20px;
+            padding: 10px 18px;
+            font-size: 16px;
             cursor: pointer;
+        }
+
+        #results-section {
+            margin-top: 40px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
         #results-section ul {
@@ -78,54 +67,50 @@
 <body>
     <h2>🏃 Riegel Race Predictor</h2>
 
-    <div id="container">
-        <!-- Input section -->
-        <div id="input-section">
-            <h3>Enter Your Best Race Times</h3>
+    <div id="input-section">
+        <h3>Enter Your Best Race Times</h3>
 
-            <div class="distance-group" data-distance="1.609">
-                <h4>Mile (1.609 km)</h4>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-            </div>
-
-            <div class="distance-group" data-distance="5">
-                <h4>5K</h4>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-            </div>
-
-            <div class="distance-group" data-distance="10">
-                <h4>10K</h4>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-            </div>
-
-            <div class="distance-group" data-distance="21.095">
-                <h4>Half Marathon (21.095 km)</h4>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-            </div>
-
-            <div class="distance-group" data-distance="42.195">
-                <h4>Marathon (42.195 km)</h4>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-                <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-            </div>
-
-            <button onclick="calculatePredictions()">Predict Times</button>
+        <div class="distance-group" data-distance="1.609">
+            <h4>Mile (1.609 km)</h4>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
         </div>
 
-        <!-- Results section -->
-        <div id="results-section">
-            <h3>Predictions:</h3>
-            <ul id="results"></ul>
+        <div class="distance-group" data-distance="5">
+            <h4>5K</h4>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
         </div>
+
+        <div class="distance-group" data-distance="10">
+            <h4>10K</h4>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        </div>
+
+        <div class="distance-group" data-distance="21.095">
+            <h4>Half Marathon (21.095 km)</h4>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        </div>
+
+        <div class="distance-group" data-distance="42.195">
+            <h4>Marathon (42.195 km)</h4>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+            <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        </div>
+
+        <button onclick="calculatePredictions()">Predict Times</button>
+    </div>
+
+    <div id="results-section">
+        <h3>Predictions:</h3>
+        <ul id="results"></ul>
     </div>
 
     <script src="script.js"></script>
