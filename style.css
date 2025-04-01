@@ -1,0 +1,23 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 40px;
+    background-color: #f8f8f8;
+    color: #333;
+    max-width: 600px;
+    margin: auto;
+}
+
+h1, h3 {
+    color: #222;
+}
+
+ul {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+li {
+    margin-bottom: 8px;
+}
