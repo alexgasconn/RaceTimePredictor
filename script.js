@@ -1,3 +1,15 @@
+function parseDuration(duration) {
+    const parts = duration.split(":").map(Number);
+    if(parts.length === 3) {
+        return parts[0] * 60 + parts[1] + parts[2]/60;
+    } else if(parts.length === 2) {
+        return parts[0] + parts[1]/60;
+    } else if(parts.length === 1) {
+        return parts[0]/60;
+    }
+    return null;
+}
+
 function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
     const today = new Date();
     let totalWeightedTime = 0;
@@ -6,7 +18,7 @@ function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
     timesWithDates.forEach(({time, date}) => {
         if(time && date){
             const daysAgo = (today - new Date(date)) / (1000*60*60*24);
-            const weight = 1 / (1 + daysAgo/365); // Más reciente = más peso
+            const weight = 1 / (1 + daysAgo/365); 
             totalWeightedTime += weight * time * Math.pow((toDist/fromDist), 1.06);
             totalWeight += weight;
         }
@@ -26,8 +38,9 @@ function calculatePredictions() {
         let timesWithDates = [];
 
         for(let i = 0; i < inputs.length; i += 2) {
-            const time = parseFloat(inputs[i].value);
+            const timeStr = inputs[i].value;
             const date = inputs[i+1].value;
+            const time = parseDuration(timeStr);
             if(time && date){
                 timesWithDates.push({time, date});
             }
@@ -60,8 +73,8 @@ function displayResults(predictions) {
     resultsList.innerHTML = "";
 
     for(let race in predictions) {
-        let li = document.createElement('li');
-        li.textContent = `${race}: ${predictions[race]} min`;
-        resultsList.appendChild(li);
+        let minutes = Math.floor(predictions[race]);
+        let seconds = Math.round((predictions[race] - minutes) * 60);
+        resultsList.innerHTML += `<li>${race}: ${minutes} min ${seconds} sec</li>`;
     }
 }
