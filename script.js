@@ -1,13 +1,12 @@
 function parseDuration(duration) {
     const parts = duration.split(":").map(Number);
-    if(parts.length === 3) {
-        return parts[0] * 60 + parts[1] + parts[2]/60;
-    } else if(parts.length === 2) {
+    if(parts.length === 3) { // hh:mm:ss
+        return parts[0]*60 + parts[1] + parts[2]/60;
+    } else if(parts.length === 2) { // mm:ss
         return parts[0] + parts[1]/60;
-    } else if(parts.length === 1) {
-        return parts[0]/60;
+    } else {
+        return null;
     }
-    return null;
 }
 
 function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
@@ -16,7 +15,7 @@ function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
     let totalWeight = 0;
 
     timesWithDates.forEach(({time, date}) => {
-        let weight = 1; // Default weight
+        let weight = 1; 
         if (date) {
             const daysAgo = (today - new Date(date)) / (1000*60*60*24);
             weight = 1 / (1 + daysAgo/365); 
@@ -25,7 +24,7 @@ function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
         totalWeight += weight;
     });
 
-    return (totalWeightedTime / totalWeight).toFixed(2);
+    return totalWeightedTime / totalWeight;
 }
 
 function calculatePredictions() {
@@ -39,9 +38,10 @@ function calculatePredictions() {
         let timesWithDates = [];
 
         for(let i = 0; i < inputs.length; i += 2) {
-            const timeStr = inputs[i].value;
-            const date = inputs[i+1].value || null; // Date is optional
+            const timeStr = inputs[i].value.trim();
+            const dateStr = inputs[i+1].value;
             const time = parseDuration(timeStr);
+            const date = dateStr ? dateStr : null;
             if(time){
                 timesWithDates.push({time, date});
             }
@@ -56,8 +56,9 @@ function calculatePredictions() {
         let predictedTimes = [];
         
         for(let fromDist in userTimes) {
-            if(userTimes[fromDist].length > 0) {
-                predictedTimes.push(parseFloat(dateWeightedRiegel(userTimes[fromDist], fromDist, targetDist)));
+            const prediction = dateWeightedRiegel(userTimes[fromDist], fromDist, targetDist);
+            if (!isNaN(prediction)) {
+                predictedTimes.push(prediction);
             }
         }
 
@@ -74,8 +75,15 @@ function displayResults(predictions) {
     resultsList.innerHTML = "";
 
     for(let race in predictions) {
-        let minutes = Math.floor(predictions[race]);
-        let seconds = Math.round((predictions[race] - minutes) * 60);
-        resultsList.innerHTML += `<li>${race}: ${minutes} min ${seconds} sec</li>`;
+        const totalSeconds = predictions[race] * 60;
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = Math.round(totalSeconds % 60);
+
+        const formatted = hours > 0 ? 
+            `${hours}h ${minutes}m ${seconds}s` : 
+            `${minutes}m ${seconds}s`;
+
+        resultsList.innerHTML += `<li>${race}: ${formatted}</li>`;
     }
 }
