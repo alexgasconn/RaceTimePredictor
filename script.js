@@ -1,8 +1,15 @@
-function parseDuration(str) {
-  const parts = str.trim().split(":").map(Number);
-  if (parts.length === 3) return parts[0]*60 + parts[1] + parts[2]/60;
-  if (parts.length === 2) return parts[0] + parts[1]/60;
-  return null;
+function parseDuration(duration) {
+  if (!duration || typeof duration !== "string") return null;
+  const parts = duration.trim().split(":").map(Number);
+  if (parts.some(isNaN)) return null;
+
+  if (parts.length === 3) {
+    return parts[0] * 60 + parts[1] + parts[2] / 60;
+  } else if (parts.length === 2) {
+    return parts[0] + parts[1] / 60;
+  } else {
+    return null;
+  }
 }
 
 function riegel(time, fromDist, toDist) {
@@ -11,148 +18,131 @@ function riegel(time, fromDist, toDist) {
 
 function dateWeight(date) {
   if (!date) return 1;
-  const daysAgo = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24);
+  const today = new Date();
+  const daysAgo = (today - new Date(date)) / (1000 * 60 * 60 * 24);
   return 1 / (1 + daysAgo / 365);
 }
 
 function weightedAverage(predictions) {
-  let total = 0, weightSum = 0;
-  predictions.forEach(p => {
+  let total = 0,
+    totalWeight = 0;
+  predictions.forEach((p) => {
     total += p.value * p.weight;
-    weightSum += p.weight;
+    totalWeight += p.weight;
   });
-  return total / weightSum;
-}
-
-function formatTime(mins) {
-  const totalSeconds = mins * 60;
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = Math.round(totalSeconds % 60);
-  return h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
+  return totalWeight > 0 ? total / totalWeight : null;
 }
 
 function calculatePredictions() {
   const distances = [1.609, 5, 10, 21.095, 42.195];
-  const names = {
-    1.609: "Mile (1.609 km)",
-    5: "5K",
-    10: "10K",
-    21.095: "Half Marathon",
-    42.195: "Marathon"
-  };
+  const distanceNames = ["Mile (1.609 km)", "5K", "10K", "Half Marathon", "Marathon"];
+  let userTimes = {};
 
-  const userTimes = {};
-  const results = {};
-
-  distances.forEach(dist => {
-    const group = document.querySelector(`.distance-group[data-distance="${dist}"]`);
+  document.querySelectorAll(".distance-group").forEach((group) => {
+    const dist = parseFloat(group.getAttribute("data-distance"));
     const inputs = group.querySelectorAll("input");
-    const values = [];
+    let timesWithDates = [];
 
     for (let i = 0; i < inputs.length; i += 2) {
-      const time = parseDuration(inputs[i].value);
-      const date = inputs[i+1].value;
-      if (time) values.push({ time, date });
-    }
-    if (values.length > 0) userTimes[dist] = values;
-  });
-
-  distances.forEach(target => {
-    let all = [];
-
-    for (let from in userTimes) {
-      if (parseFloat(from) !== target) {
-        userTimes[from].forEach(entry => {
-          const predicted = riegel(entry.time, parseFloat(from), target);
-          const weight = dateWeight(entry.date);
-          all.push({ value: predicted, weight });
-        });
+      const timeStr = inputs[i].value.trim();
+      const dateStr = inputs[i + 1].value;
+      const time = parseDuration(timeStr);
+      const date = dateStr || null;
+      if (time) {
+        timesWithDates.push({ time, date });
       }
     }
 
-    if (all.length > 0) {
-      const avg = weightedAverage(all);
-      results[target] = avg;
+    if (timesWithDates.length > 0) {
+      userTimes[dist] = timesWithDates;
     }
   });
 
-  showResults(results, userTimes, names);
-}
+  let predictions = {};
 
-function showResults(results, userTimes, names) {
-  const list = document.getElementById("results");
-  list.innerHTML = "";
+  distances.forEach((targetDist, idx) => {
+    let allPredictions = [];
 
-  for (let dist in results) {
-    const time = results[dist];
-    const pace = time / dist;
-    const paceMin = Math.floor(pace);
-    const paceSec = Math.round((pace - paceMin) * 60);
-    const paceFormatted = `${paceMin}:${paceSec.toString().padStart(2, '0')} min/km`;
-
-    const group = document.querySelector(`.distance-group[data-distance="${dist}"]`);
-    const canvas = group.querySelector("canvas");
-    const ctx = canvas.getContext("2d");
-
-    const realData = userTimes[dist]?.map(e => e.time) || [];
-    const lower = time * 0.95;
-    const upper = time * 1.05;
-
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: realData.map((_, i) => `#${i + 1}`),
-        datasets: [
-          {
-            label: "User Time",
-            data: realData,
-            borderColor: "blue",
-            tension: 0.2,
-            fill: false
-          },
-          {
-            label: "Predicted",
-            data: new Array(realData.length).fill(time),
-            borderColor: "green",
-            borderDash: [5, 5],
-            pointRadius: 0,
-            fill: false
-          },
-          {
-            label: "±5% Range",
-            data: new Array(realData.length).fill(upper),
-            backgroundColor: "rgba(0,255,0,0.1)",
-            fill: '+1',
-            pointRadius: 0,
-            borderWidth: 0
-          },
-          {
-            label: "",
-            data: new Array(realData.length).fill(lower),
-            fill: '-1',
-            backgroundColor: "rgba(0,255,0,0.1)",
-            pointRadius: 0,
-            borderWidth: 0
-          }
-        ]
-      },
-      options: {
-        plugins: {
-          legend: { display: false }
-        },
-        responsive: true,
-        scales: {
-          y: { title: { display: true, text: "Minutes" } }
-        }
+    distances.forEach((fromDist) => {
+      if (fromDist !== targetDist && userTimes[fromDist]) {
+        userTimes[fromDist].forEach((entry) => {
+          const predictedTime = riegel(entry.time, fromDist, targetDist);
+          const weight = dateWeight(entry.date);
+          allPredictions.push({ value: predictedTime, weight });
+        });
       }
     });
 
-    list.innerHTML += `
+    if (allPredictions.length > 0) {
+      predictions[distanceNames[idx]] = weightedAverage(allPredictions);
+    }
+  });
+
+  if (Object.keys(predictions).length === 0) {
+    alert("No valid predictions could be made. Please enter at least one valid time.");
+  } else {
+    console.log("Predictions:", predictions);
+    displayResults(predictions);
+  }
+}
+
+function displayResults(predictions) {
+  const resultsList = document.getElementById("results");
+  resultsList.innerHTML = "";
+
+  const distancesMap = {
+    "Mile (1.609 km)": 1.609,
+    "5K": 5,
+    "10K": 10,
+    "Half Marathon": 21.095,
+    "Marathon": 42.195,
+  };
+
+  for (let race in predictions) {
+    const timeMin = predictions[race];
+    const dist = distancesMap[race];
+    const pace = timeMin / dist;
+
+    const totalSeconds = timeMin * 60;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.round(totalSeconds % 60);
+    const timeFormatted =
+      hours > 0
+        ? `${hours}h ${minutes}m ${seconds}s`
+        : `${minutes}m ${seconds}s`;
+
+    const paceMin = Math.floor(pace);
+    const paceSec = Math.round((pace - paceMin) * 60);
+    const paceFormatted = `${paceMin}:${paceSec.toString().padStart(2, "0")} min/km`;
+
+    let confidence = "—";
+    const userEntries = document.querySelector(`.distance-group[data-distance="${dist}"]`);
+    if (userEntries) {
+      const inputs = userEntries.querySelectorAll("input");
+      let realTimes = [];
+
+      for (let i = 0; i < inputs.length; i += 2) {
+        const timeStr = inputs[i].value.trim();
+        const time = parseDuration(timeStr);
+        if (time) realTimes.push(time);
+      }
+
+      if (realTimes.length > 0) {
+        const avgError =
+          realTimes.reduce((sum, actual) => sum + Math.abs(actual - timeMin), 0) /
+          realTimes.length;
+        const relativeError = avgError / timeMin;
+        const reliability = Math.max(0, 100 - relativeError * 100);
+        confidence = `${Math.round(reliability)}%`;
+      }
+    }
+
+    resultsList.innerHTML += `
       <li>
-        <strong>${names[dist]}:</strong> ${formatTime(time)}<br>
-        Pace: <em>${paceFormatted}</em>
-      </li>
-    `;
+        <strong>${race}:</strong> ${timeFormatted}<br>
+        Pace: <em>${paceFormatted}</em><br>
+        Confidence: <strong>${confidence}</strong>
+      </li>`;
   }
 }
