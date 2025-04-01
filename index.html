@@ -2,22 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Riegel Race Predictor</title>
+    <title>Riegel Predictor</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>🏃‍♂️ Riegel Race Time Predictor</h1>
+    <h2>🏃 Riegel Race Predictor</h2>
 
-    <h3>Predicted Race Times:</h3>
-    <ul id="predictions">
-        <li>Mile: 6.05 min</li>
-        <li>5K: 20.3 min</li>
-        <li>10K: 42.4 min</li>
-        <li>Half Marathon: 94.1 min</li>
-        <li>Marathon: 196.5 min</li>
-    </ul>
+    <div id="input-section">
+        <h3>Enter Your Best Race Times</h3>
 
-    <p>*Update these predictions by running your Python script locally.</p>
+        <div class="distance-group" data-distance="1.609">
+            <h4>Mile (1.609 km)</h4>
+            <input placeholder="Best time (min)" type="number" step="0.01">
+            <input placeholder="2nd best (optional)" type="number" step="0.01">
+            <input placeholder="3rd best (optional)" type="number" step="0.01">
+        </div>
+
+        <div class="distance-group" data-distance="5">
+            <h4>5K</h4>
+            <input placeholder="Best time (min)" type="number" step="0.01">
+            <input placeholder="2nd best (optional)" type="number" step="0.01">
+            <input placeholder="3rd best (optional)" type="number" step="0.01">
+        </div>
+
+        <div class="distance-group" data-distance="10">
+            <h4>10K</h4>
+            <input placeholder="Best time (min)" type="number" step="0.01">
+            <input placeholder="2nd best (optional)" type="number" step="0.01">
+            <input placeholder="3rd best (optional)" type="number" step="0.01">
+        </div>
+
+        <div class="distance-group" data-distance="21.095">
+            <h4>Half Marathon (21.095 km)</h4>
+            <input placeholder="Best time (min)" type="number" step="0.01">
+            <input placeholder="2nd best (optional)" type="number" step="0.01">
+            <input placeholder="3rd best (optional)" type="number" step="0.01">
+        </div>
+
+        <div class="distance-group" data-distance="42.190">
+            <h4>Marathon (42.190 km)</h4>
+            <input placeholder="Best time (min)" type="number" step="0.01">
+            <input placeholder="2nd best (optional)" type="number" step="0.01">
+            <input placeholder="3rd best (optional)" type="number" step="0.01">
+        </div>
+
+
+
+        <button onclick="calculatePredictions()">Predict Times</button>
+    </div>
+
+    <div id="results-section">
+        <h3>Predictions:</h3>
+        <ul id="results"></ul>
+    </div>
 
     <script src="script.js"></script>
 </body>
