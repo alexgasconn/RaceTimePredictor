@@ -16,12 +16,13 @@ function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
     let totalWeight = 0;
 
     timesWithDates.forEach(({time, date}) => {
-        if(time && date){
+        let weight = 1; // Default weight
+        if (date) {
             const daysAgo = (today - new Date(date)) / (1000*60*60*24);
-            const weight = 1 / (1 + daysAgo/365); 
-            totalWeightedTime += weight * time * Math.pow((toDist/fromDist), 1.06);
-            totalWeight += weight;
+            weight = 1 / (1 + daysAgo/365); 
         }
+        totalWeightedTime += weight * time * Math.pow((toDist/fromDist), 1.06);
+        totalWeight += weight;
     });
 
     return (totalWeightedTime / totalWeight).toFixed(2);
@@ -39,9 +40,9 @@ function calculatePredictions() {
 
         for(let i = 0; i < inputs.length; i += 2) {
             const timeStr = inputs[i].value;
-            const date = inputs[i+1].value;
+            const date = inputs[i+1].value || null; // Date is optional
             const time = parseDuration(timeStr);
-            if(time && date){
+            if(time){
                 timesWithDates.push({time, date});
             }
         }
