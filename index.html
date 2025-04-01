@@ -3,44 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <title>Riegel Predictor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root {
+      --bg: #f5f5f5;
+      --text: #000;
+      --card: #fff;
+    }
+
+    body.dark-mode {
+      --bg: #121212;
+      --text: #fff;
+      --card: #1e1e1e;
+    }
+
     body {
+      background-color: var(--bg);
+      color: var(--text);
       font-family: Arial, sans-serif;
       padding: 30px;
-      background-color: #f5f5f5;
     }
 
     h1 {
       text-align: center;
       font-size: 2.2em;
-      margin-bottom: 40px;
+      margin-bottom: 20px;
+    }
+
+    #toggle-theme {
+      float: right;
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
     }
 
     #container {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
       gap: 40px;
+      flex-wrap: wrap;
+      justify-content: space-between;
     }
 
     #input-section {
-      background: white;
+      background: var(--card);
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       width: 60%;
     }
 
     #results-section {
-      background: white;
+      background: var(--card);
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      width: 30%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 35%;
     }
 
     .distance-group {
-      margin-bottom: 25px;
+      margin-bottom: 35px;
     }
 
     .distance-group h4 {
@@ -60,6 +81,11 @@
       padding: 5px;
     }
 
+    canvas {
+      margin-top: 10px;
+      background-color: var(--bg);
+    }
+
     button {
       padding: 10px 20px;
       cursor: pointer;
@@ -70,30 +96,20 @@
       margin-bottom: 20px;
     }
 
-    #results-section ul {
+    ul {
       list-style: none;
-      padding-left: 0;
+      padding: 0;
     }
 
-    #results-section li {
-      margin-bottom: 16px;
-      border-bottom: 1px solid #ddd;
+    li {
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ccc;
       padding-bottom: 10px;
-    }
-
-    @media screen and (max-width: 1000px) {
-      #container {
-        flex-direction: column;
-      }
-
-      #input-section,
-      #results-section {
-        width: 100%;
-      }
     }
   </style>
 </head>
 <body>
+  <button id="toggle-theme">Toggle Theme</button>
   <h1>🏃 Riegel Race Predictor</h1>
 
   <div id="container">
@@ -102,37 +118,42 @@
 
       <div class="distance-group" data-distance="1.609">
         <h4>Mile (1.609 km)</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <canvas id="chart-1.609" height="100"></canvas>
       </div>
 
       <div class="distance-group" data-distance="5">
         <h4>5K</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <canvas id="chart-5" height="100"></canvas>
       </div>
 
       <div class="distance-group" data-distance="10">
         <h4>10K</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <canvas id="chart-10" height="100"></canvas>
       </div>
 
       <div class="distance-group" data-distance="21.095">
         <h4>Half Marathon (21.095 km)</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <canvas id="chart-21.095" height="100"></canvas>
       </div>
 
       <div class="distance-group" data-distance="42.195">
         <h4>Marathon (42.195 km)</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)" /><input type="date" /></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
+        <canvas id="chart-42.195" height="100"></canvas>
       </div>
     </div>
 
@@ -144,5 +165,10 @@
   </div>
 
   <script src="script.js"></script>
+  <script>
+    document.getElementById('toggle-theme').onclick = () => {
+      document.body.classList.toggle('dark-mode');
+    };
+  </script>
 </body>
 </html>
