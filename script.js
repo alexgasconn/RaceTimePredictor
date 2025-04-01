@@ -1,30 +1,31 @@
 function parseDuration(duration) {
-    const parts = duration.split(":").map(Number);
-    if(parts.length === 3) { // hh:mm:ss
+    const parts = duration.trim().split(":").map(Number);
+    if(parts.length === 3) // hh:mm:ss
         return parts[0]*60 + parts[1] + parts[2]/60;
-    } else if(parts.length === 2) { // mm:ss
+    else if(parts.length === 2) // mm:ss
         return parts[0] + parts[1]/60;
-    } else {
+    else
         return null;
-    }
 }
 
-function dateWeightedRiegel(timesWithDates, fromDist, toDist) {
+function dateWeight(date) {
+    if(!date) return 1;
     const today = new Date();
-    let totalWeightedTime = 0;
-    let totalWeight = 0;
+    const daysAgo = (today - new Date(date)) / (1000*60*60*24);
+    return 1 / (1 + daysAgo/365); // más reciente más peso
+}
 
-    timesWithDates.forEach(({time, date}) => {
-        let weight = 1; 
-        if (date) {
-            const daysAgo = (today - new Date(date)) / (1000*60*60*24);
-            weight = 1 / (1 + daysAgo/365); 
-        }
-        totalWeightedTime += weight * time * Math.pow((toDist/fromDist), 1.06);
-        totalWeight += weight;
+function riegel(time, fromDist, toDist) {
+    return time * Math.pow(toDist / fromDist, 1.06);
+}
+
+function weightedAverage(predictions) {
+    let total = 0, weightSum = 0;
+    predictions.forEach(p => {
+        total += p.value * p.weight;
+        weightSum += p.weight;
     });
-
-    return totalWeightedTime / totalWeight;
+    return total / weightSum;
 }
 
 function calculatePredictions() {
@@ -41,30 +42,28 @@ function calculatePredictions() {
             const timeStr = inputs[i].value.trim();
             const dateStr = inputs[i+1].value;
             const time = parseDuration(timeStr);
-            const date = dateStr ? dateStr : null;
-            if(time){
-                timesWithDates.push({time, date});
-            }
+            if(time) timesWithDates.push({time, date: dateStr || null});
         }
-        if(timesWithDates.length > 0)
-            userTimes[dist] = timesWithDates;
+        if(timesWithDates.length > 0) userTimes[dist] = timesWithDates;
     });
 
     let predictions = {};
 
     distances.forEach((targetDist, idx) => {
-        let predictedTimes = [];
-        
-        for(let fromDist in userTimes) {
-            const prediction = dateWeightedRiegel(userTimes[fromDist], fromDist, targetDist);
-            if (!isNaN(prediction)) {
-                predictedTimes.push(prediction);
-            }
-        }
+        let allPredictions = [];
 
-        if(predictedTimes.length > 0) {
-            predictions[distanceNames[idx]] = Math.min(...predictedTimes);
-        }
+        distances.forEach(fromDist => {
+            if(fromDist !== targetDist && userTimes[fromDist]) {
+                userTimes[fromDist].forEach(entry => {
+                    const predictedTime = riegel(entry.time, fromDist, targetDist);
+                    const weight = dateWeight(entry.date);
+                    allPredictions.push({value: predictedTime, weight});
+                });
+            }
+        });
+
+        if(allPredictions.length > 0)
+            predictions[distanceNames[idx]] = weightedAverage(allPredictions);
     });
 
     displayResults(predictions);
