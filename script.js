@@ -227,6 +227,7 @@ function predictWithML() {
     const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
 
     // Buscar el <li> correspondiente a esta distancia
+    console.log("Trying to append ML predictions to results:", Object.keys(predictions));
     items.forEach(li => {
       const strong = li.querySelector("strong");
       if (strong && strong.innerText === raceLabel && !li.innerHTML.includes("ML Prediction")) {
