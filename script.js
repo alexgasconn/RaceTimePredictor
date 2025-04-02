@@ -37,8 +37,7 @@ function calculatePredictions() {
   const distanceNames = ["Mile (1.609 km)", "5K", "10K", "Half Marathon", "Marathon"];
   let userTimes = {};
 
-  // Get all fixed distances
-  document.querySelectorAll(".distance-group").forEach((group) => {
+  document.querySelectorAll(".distance-group").forEach(group => {
     const distAttr = group.getAttribute("data-distance");
     if (distAttr === "custom") return;
 
@@ -61,7 +60,7 @@ function calculatePredictions() {
     }
   });
 
-  // Handle custom distances
+  // Custom distances
   const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
   if (customGroup) {
     const inputs = customGroup.querySelectorAll("input");
@@ -80,14 +79,13 @@ function calculatePredictions() {
   }
 
   let predictions = {};
-
   distances.forEach((targetDist, idx) => {
     let allPredictions = [];
 
     for (let fromDist in userTimes) {
       const from = parseFloat(fromDist);
       if (from !== targetDist) {
-        userTimes[fromDist].forEach((entry) => {
+        userTimes[fromDist].forEach(entry => {
           const predictedTime = riegel(entry.time, from, targetDist);
           const weight = dateWeight(entry.date);
           allPredictions.push({ value: predictedTime, weight });
@@ -103,7 +101,6 @@ function calculatePredictions() {
   if (Object.keys(predictions).length === 0) {
     alert("No valid predictions could be made. Please enter at least one valid time.");
   } else {
-    console.log("Predictions:", predictions);
     displayResults(predictions, userTimes);
   }
 }
@@ -130,9 +127,7 @@ function displayResults(predictions, userTimes = {}) {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = Math.round(totalSeconds % 60);
     const timeFormatted =
-      hours > 0
-        ? `${hours}h ${minutes}m ${seconds}s`
-        : `${minutes}m ${seconds}s`;
+      hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
 
     const paceMin = Math.floor(pace);
     const paceSec = Math.round((pace - paceMin) * 60);
@@ -154,7 +149,7 @@ function displayResults(predictions, userTimes = {}) {
     }
 
     resultsList.innerHTML += `
-      <li>
+      <li data-label="${race}">
         <strong>${race}:</strong> ${timeFormatted}<br>
         Pace: <em>${paceFormatted}</em><br>
         Confidence: <strong>${confidence}</strong>
@@ -162,7 +157,6 @@ function displayResults(predictions, userTimes = {}) {
   }
 }
 
-// 🔶 ML Prediction Button Logic
 function predictWithML() {
   const distancesMap = {
     "Mile (1.609 km)": 1.609,
@@ -204,31 +198,29 @@ function predictWithML() {
   const XT = math.transpose(X);
   const XTX = math.multiply(XT, X);
   const XTy = math.multiply(XT, y);
-  const theta = math.lusolve(XTX, XTy).flat(); // [coef_dist, coef_days, intercept]
+  const theta = math.lusolve(XTX, XTy).flat();
 
-  // Predict
   const predictions = {};
   Object.entries(distancesMap).forEach(([label, dist]) => {
-    const predicted = dist * theta[0] + 0 * theta[1] + theta[2];
+    const predicted = dist * theta[0] + 0 * theta[1] + theta[2]; // daysAgo = 0 for future
     predictions[label] = predicted;
   });
 
-  // Show results
   const resultsList = document.getElementById("results");
   const items = resultsList.querySelectorAll("li");
 
-  Object.entries(predictions).forEach(([label, timeMin]) => {
-    const li = Array.from(items).find(li => li.textContent.includes(label));
-    if (!li || li.innerHTML.includes("ML Prediction")) return;
-
-    const totalSec = timeMin * 60;
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = Math.round(totalSec % 60);
+  Object.entries(predictions).forEach(([raceLabel, mlTime]) => {
+    const sec = mlTime * 60;
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.round(sec % 60);
     const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
 
-    li.innerHTML += `<br><span style="color: #ff7f00;">ML Prediction: ${formatted}</span>`;
+    items.forEach(li => {
+      const label = li.getAttribute("data-label");
+      if (label === raceLabel && !li.innerHTML.includes("ML Prediction")) {
+        li.innerHTML += `<br><span style="color: #ff7f00;">ML Prediction: ${formatted}</span>`;
+      }
+    });
   });
 }
-
-
