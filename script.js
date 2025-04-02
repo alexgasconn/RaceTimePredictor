@@ -147,8 +147,8 @@ function displayResults(predictions, userTimes = {}) {
         realTimes.length;
       const relativeError = avgError / timeMin;
       const numEntries = realTimes.length;
-      const dataFactor = Math.min(numEntries, 6); // máx. efecto con 5 o más datos
-      const penaltyFactor = 3 + (5 - dataFactor) * 0.5; // entre 3.0 y 5.0
+      const dataFactor = Math.min(numEntries, 6);
+      const penaltyFactor = 3 + (5 - dataFactor) * 0.5;
       const reliability = Math.max(0, 100 * Math.exp(-relativeError * penaltyFactor));
       confidence = `${Math.round(reliability)}%`;
     }
@@ -160,4 +160,75 @@ function displayResults(predictions, userTimes = {}) {
         Confidence: <strong>${confidence}</strong>
       </li>`;
   }
+}
+
+// 🔶 ML Prediction Button Logic
+function predictWithML() {
+  const distancesMap = {
+    "Mile (1.609 km)": 1.609,
+    "5K": 5,
+    "10K": 10,
+    "Half Marathon": 21.095,
+    "Marathon": 42.195,
+  };
+
+  const today = new Date();
+  let dataset = [];
+
+  document.querySelectorAll(".distance-group").forEach(group => {
+    const distAttr = group.getAttribute("data-distance");
+    if (distAttr === "custom") return;
+
+    const dist = parseFloat(distAttr);
+    const inputs = group.querySelectorAll("input");
+
+    for (let i = 0; i < inputs.length; i += 2) {
+      const time = parseDuration(inputs[i].value.trim());
+      const dateStr = inputs[i + 1].value;
+      const date = dateStr ? new Date(dateStr) : null;
+      if (time && date) {
+        const daysAgo = (today - date) / (1000 * 60 * 60 * 24);
+        dataset.push({ distance: dist, time, daysAgo });
+      }
+    }
+  });
+
+  if (dataset.length < 3) {
+    alert("Need at least 3 valid entries with time + date for ML prediction.");
+    return;
+  }
+
+  const X = dataset.map(d => [d.distance, d.daysAgo]);
+  const y = dataset.map(d => d.time);
+
+  // Solve linear regression: theta = (X^T X)^-1 X^T y
+  const XT = math.transpose(X);
+  const XTX = math.multiply(XT, X);
+  const XTy = math.multiply(XT, y);
+  const theta = math.lusolve(XTX, XTy).flat(); // [coef_dist, coef_days, intercept]
+
+  // Predict each official distance
+  const predictions = {};
+  Object.entries(distancesMap).forEach(([label, dist]) => {
+    const predicted = dist * theta[0] + 0 * theta[1] + theta[2];
+    predictions[label] = predicted;
+  });
+
+  // Add results to HTML
+  const resultsList = document.getElementById("results");
+  const items = resultsList.querySelectorAll("li");
+
+  items.forEach(li => {
+    const title = li.querySelector("strong").innerText;
+    const mlTime = predictions[title];
+    if (mlTime) {
+      const sec = mlTime * 60;
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.round(sec % 60);
+      const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
+
+      li.innerHTML += `<br><span style="color: #ff7f00;">ML Prediction: ${formatted}</span>`;
+    }
+  });
 }
