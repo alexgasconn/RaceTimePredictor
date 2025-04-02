@@ -24,9 +24,8 @@ function dateWeight(date) {
 }
 
 function weightedAverage(predictions) {
-  let total = 0,
-    totalWeight = 0;
-  predictions.forEach((p) => {
+  let total = 0, totalWeight = 0;
+  predictions.forEach(p => {
     total += p.value * p.weight;
     totalWeight += p.weight;
   });
@@ -38,8 +37,12 @@ function calculatePredictions() {
   const distanceNames = ["Mile (1.609 km)", "5K", "10K", "Half Marathon", "Marathon"];
   let userTimes = {};
 
+  // Get all fixed distances
   document.querySelectorAll(".distance-group").forEach((group) => {
-    const dist = parseFloat(group.getAttribute("data-distance"));
+    const distAttr = group.getAttribute("data-distance");
+    if (distAttr === "custom") return;
+
+    const dist = parseFloat(distAttr);
     const inputs = group.querySelectorAll("input");
     let timesWithDates = [];
 
@@ -58,20 +61,39 @@ function calculatePredictions() {
     }
   });
 
+  // Handle custom distances
+  const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
+  if (customGroup) {
+    const inputs = customGroup.querySelectorAll("input");
+    for (let i = 0; i < inputs.length; i += 3) {
+      const dist = parseFloat(inputs[i].value);
+      const timeStr = inputs[i + 1].value.trim();
+      const dateStr = inputs[i + 2].value;
+      const time = parseDuration(timeStr);
+      const date = dateStr || null;
+
+      if (dist && time) {
+        if (!userTimes[dist]) userTimes[dist] = [];
+        userTimes[dist].push({ time, date });
+      }
+    }
+  }
+
   let predictions = {};
 
   distances.forEach((targetDist, idx) => {
     let allPredictions = [];
 
-    distances.forEach((fromDist) => {
-      if (fromDist !== targetDist && userTimes[fromDist]) {
+    for (let fromDist in userTimes) {
+      const from = parseFloat(fromDist);
+      if (from !== targetDist) {
         userTimes[fromDist].forEach((entry) => {
-          const predictedTime = riegel(entry.time, fromDist, targetDist);
+          const predictedTime = riegel(entry.time, from, targetDist);
           const weight = dateWeight(entry.date);
           allPredictions.push({ value: predictedTime, weight });
         });
       }
-    });
+    }
 
     if (allPredictions.length > 0) {
       predictions[distanceNames[idx]] = weightedAverage(allPredictions);
@@ -82,11 +104,11 @@ function calculatePredictions() {
     alert("No valid predictions could be made. Please enter at least one valid time.");
   } else {
     console.log("Predictions:", predictions);
-    displayResults(predictions);
+    displayResults(predictions, userTimes);
   }
 }
 
-function displayResults(predictions) {
+function displayResults(predictions, userTimes = {}) {
   const resultsList = document.getElementById("results");
   resultsList.innerHTML = "";
 
@@ -117,30 +139,18 @@ function displayResults(predictions) {
     const paceFormatted = `${paceMin}:${paceSec.toString().padStart(2, "0")} min/km`;
 
     let confidence = "—";
-    const userEntries = document.querySelector(`.distance-group[data-distance="${dist}"]`);
-    if (userEntries) {
-      const inputs = userEntries.querySelectorAll("input");
-      let realTimes = [];
+    const realTimes = userTimes[dist] || [];
 
-      for (let i = 0; i < inputs.length; i += 2) {
-        const timeStr = inputs[i].value.trim();
-        const time = parseDuration(timeStr);
-        if (time) realTimes.push(time);
-      }
-
-      if (realTimes.length > 0) {
-        const avgError =
-          realTimes.reduce((sum, actual) => sum + Math.abs(actual - timeMin), 0) /
-          realTimes.length;
-        const relativeError = avgError / timeMin;
-        const numEntries = realTimes.length;
-        const dataFactor = Math.min(numEntries, 6); // máx. efecto con 5 o más datos
-        const penaltyFactor = 3 + (5 - dataFactor) * 0.5; // entre 3.0 y 5.0
-        
-        const reliability = Math.max(0, 100 * Math.exp(-relativeError * penaltyFactor));
-        confidence = `${Math.round(reliability)}%`;
-
-      }
+    if (realTimes.length > 0) {
+      const avgError =
+        realTimes.reduce((sum, actual) => sum + Math.abs(actual.time - timeMin), 0) /
+        realTimes.length;
+      const relativeError = avgError / timeMin;
+      const numEntries = realTimes.length;
+      const dataFactor = Math.min(numEntries, 6); // máx. efecto con 5 o más datos
+      const penaltyFactor = 3 + (5 - dataFactor) * 0.5; // entre 3.0 y 5.0
+      const reliability = Math.max(0, 100 * Math.exp(-relativeError * penaltyFactor));
+      confidence = `${Math.round(reliability)}%`;
     }
 
     resultsList.innerHTML += `
