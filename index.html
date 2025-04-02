@@ -57,11 +57,19 @@
     button {
       padding: 10px 20px;
       cursor: pointer;
-      background-color: #2d85ff;
-      color: white;
       border: none;
       border-radius: 5px;
       margin-top: 10px;
+    }
+
+    .primary-btn {
+      background-color: #2d85ff;
+      color: white;
+    }
+
+    .ml-btn {
+      background-color: #ffa94d;
+      color: black;
     }
 
     #results-section {
@@ -152,25 +160,21 @@
           <input type="date">
         </div>
       </div>
-
-      <button onclick="calculatePredictions()">Predict Times</button>
     </div>
 
-<!-- Column 3: Results -->
-<div id="results-section">
-  <div style="display: flex; justify-content: space-between; align-items: center;">
-    <button onclick="calculatePredictions()">Predict Times</button>
-    <button onclick="predictWithML()" style="background-color: #ffa94d; color: black;">
-      Predict with ML
-    </button>
+    <!-- Column 3: Results -->
+    <div id="results-section">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="primary-btn" onclick="calculatePredictions()">Predict Times</button>
+        <button class="ml-btn" onclick="predictWithML()">Predict with ML</button>
+      </div>
+      <h3>Predictions:</h3>
+      <ul id="results"></ul>
+    </div>
   </div>
-  <h3>Predictions:</h3>
-  <ul id="results"></ul>
-</div>
 
-
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
-    <script src="script.js"></script>
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
