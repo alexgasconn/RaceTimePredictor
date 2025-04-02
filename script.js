@@ -4,9 +4,9 @@ function parseDuration(duration) {
   if (parts.some(isNaN)) return null;
 
   if (parts.length === 3) {
-    return parts[0] * 60 + parts[1] + parts[2] / 60;
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
   } else if (parts.length === 2) {
-    return parts[0] + parts[1] / 60;
+    return parts[0] * 60 + parts[1];
   } else {
     return null;
   }
@@ -51,7 +51,7 @@ function calculatePredictions() {
       const time = parseDuration(timeStr);
       const date = dateStr || null;
       if (time) {
-        timesWithDates.push({ time, date });
+        timesWithDates.push({ time: time / 60, date }); // Store in minutes for compatibility
       }
     }
 
@@ -60,7 +60,6 @@ function calculatePredictions() {
     }
   });
 
-  // Custom distances
   const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
   if (customGroup) {
     const inputs = customGroup.querySelectorAll("input");
@@ -73,7 +72,7 @@ function calculatePredictions() {
 
       if (dist && time) {
         if (!userTimes[dist]) userTimes[dist] = [];
-        userTimes[dist].push({ time, date });
+        userTimes[dist].push({ time: time / 60, date }); // minutes
       }
     }
   }
@@ -126,8 +125,7 @@ function displayResults(predictions, userTimes = {}) {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = Math.round(totalSeconds % 60);
-    const timeFormatted =
-      hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
+    const timeFormatted = hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
 
     const paceMin = Math.floor(pace);
     const paceSec = Math.round((pace - paceMin) * 60);
@@ -137,9 +135,7 @@ function displayResults(predictions, userTimes = {}) {
     const realTimes = userTimes[dist] || [];
 
     if (realTimes.length > 0) {
-      const avgError =
-        realTimes.reduce((sum, actual) => sum + Math.abs(actual.time - timeMin), 0) /
-        realTimes.length;
+      const avgError = realTimes.reduce((sum, actual) => sum + Math.abs(actual.time - timeMin), 0) / realTimes.length;
       const relativeError = avgError / timeMin;
       const numEntries = realTimes.length;
       const dataFactor = Math.min(numEntries, 6);
@@ -177,7 +173,7 @@ function predictWithML() {
     const inputs = group.querySelectorAll("input");
 
     for (let i = 0; i < inputs.length; i += 2) {
-      const time = parseDuration(inputs[i].value.trim());
+      const time = parseDuration(inputs[i].value.trim()); // now in seconds
       const dateStr = inputs[i + 1].value;
       const date = dateStr ? new Date(dateStr) : null;
       if (time && date) {
@@ -202,18 +198,18 @@ function predictWithML() {
 
   const predictions = {};
   Object.entries(distancesMap).forEach(([label, dist]) => {
-    const predicted = dist * theta[0] + 0 * theta[1] + theta[2]; // daysAgo = 0 for future
+    const predicted = dist * theta[0] + 0 * theta[1] + theta[2]; // assume today (daysAgo = 0)
     predictions[label] = predicted;
   });
 
   const resultsList = document.getElementById("results");
   const items = resultsList.querySelectorAll("li");
 
-  Object.entries(predictions).forEach(([raceLabel, mlTime]) => {
-    const sec = mlTime * 60;
+  Object.entries(predictions).forEach(([raceLabel, mlSeconds]) => {
+    const sec = Math.round(mlSeconds);
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
-    const s = Math.round(sec % 60);
+    const s = sec % 60;
     const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
 
     items.forEach(li => {
