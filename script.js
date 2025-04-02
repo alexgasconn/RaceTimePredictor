@@ -201,38 +201,34 @@ function predictWithML() {
   const X = dataset.map(d => [d.distance, d.daysAgo]);
   const y = dataset.map(d => d.time);
 
-  // Solve linear regression: theta = (X^T X)^-1 X^T y
   const XT = math.transpose(X);
   const XTX = math.multiply(XT, X);
   const XTy = math.multiply(XT, y);
   const theta = math.lusolve(XTX, XTy).flat(); // [coef_dist, coef_days, intercept]
 
-  // Predict each official distance
+  // Predict
   const predictions = {};
   Object.entries(distancesMap).forEach(([label, dist]) => {
     const predicted = dist * theta[0] + 0 * theta[1] + theta[2];
     predictions[label] = predicted;
   });
 
-  // Add results to HTML
+  // Show results
   const resultsList = document.getElementById("results");
   const items = resultsList.querySelectorAll("li");
 
-    const items = resultsList.querySelectorAll("li");
-  Object.entries(predictions).forEach(([raceLabel, mlTime]) => {
-    const sec = mlTime * 60;
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = Math.round(sec % 60);
+  Object.entries(predictions).forEach(([label, timeMin]) => {
+    const li = Array.from(items).find(li => li.textContent.includes(label));
+    if (!li || li.innerHTML.includes("ML Prediction")) return;
+
+    const totalSec = timeMin * 60;
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = Math.round(totalSec % 60);
     const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
 
-    // Buscar el <li> correspondiente a esta distancia
-    console.log("Trying to append ML predictions to results:", Object.keys(predictions));
-    items.forEach(li => {
-      const strong = li.querySelector("strong");
-      if (strong && strong.innerText === raceLabel && !li.innerHTML.includes("ML Prediction")) {
-        li.innerHTML += `<br><span style="color: #ff7f00;">ML Prediction: ${formatted}</span>`;
-      }
-    });
+    li.innerHTML += `<br><span style="color: #ff7f00;">ML Prediction: ${formatted}</span>`;
   });
+}
+
 
