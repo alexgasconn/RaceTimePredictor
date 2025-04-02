@@ -156,14 +156,18 @@
       <button onclick="calculatePredictions()">Predict Times</button>
     </div>
 
-  <!-- Column 3: Results -->
+<!-- Column 3: Results -->
 <div id="results-section">
-  <div style="display: flex; justify-content: flex-end;">
+  <div style="display: flex; justify-content: space-between;">
     <button onclick="calculatePredictions()">Predict Times</button>
+    <button onclick="predictWithML()" style="background-color: #ffa94d; color: black;">
+      Predict with ML
+    </button>
   </div>
   <h3>Predictions:</h3>
   <ul id="results"></ul>
 </div>
+
 
 
   <script src="script.js"></script>
