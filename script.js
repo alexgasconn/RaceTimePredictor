@@ -133,8 +133,13 @@ function displayResults(predictions) {
           realTimes.reduce((sum, actual) => sum + Math.abs(actual - timeMin), 0) /
           realTimes.length;
         const relativeError = avgError / timeMin;
-        const reliability = Math.max(0, 100 - relativeError * 100);
+        const numEntries = realTimes.length;
+        const dataFactor = Math.min(numEntries, 6); // máx. efecto con 5 o más datos
+        const penaltyFactor = 3 + (5 - dataFactor) * 0.5; // entre 3.0 y 5.0
+        
+        const reliability = Math.max(0, 100 * Math.exp(-relativeError * penaltyFactor));
         confidence = `${Math.round(reliability)}%`;
+
       }
     }
 
