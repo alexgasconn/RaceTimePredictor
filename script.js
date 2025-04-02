@@ -218,17 +218,20 @@ function predictWithML() {
   const resultsList = document.getElementById("results");
   const items = resultsList.querySelectorAll("li");
 
-  items.forEach(li => {
-    const title = li.querySelector("strong").innerText;
-    const mlTime = predictions[title];
-    if (mlTime) {
-      const sec = mlTime * 60;
-      const h = Math.floor(sec / 3600);
-      const m = Math.floor((sec % 3600) / 60);
-      const s = Math.round(sec % 60);
-      const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
+    const items = resultsList.querySelectorAll("li");
+  Object.entries(predictions).forEach(([raceLabel, mlTime]) => {
+    const sec = mlTime * 60;
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.round(sec % 60);
+    const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
 
-      li.innerHTML += `<br><span style="color: #ff7f00;">ML Prediction: ${formatted}</span>`;
-    }
+    // Buscar el <li> correspondiente a esta distancia
+    items.forEach(li => {
+      const strong = li.querySelector("strong");
+      if (strong && strong.innerText === raceLabel && !li.innerHTML.includes("ML Prediction")) {
+        li.innerHTML += `<br><span style="color: #ff7f00;">ML Prediction: ${formatted}</span>`;
+      }
+    });
   });
-}
+
