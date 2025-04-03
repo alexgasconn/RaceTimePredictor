@@ -57,11 +57,19 @@
     button {
       padding: 10px 20px;
       cursor: pointer;
-      background-color: #2d85ff;
-      color: white;
       border: none;
       border-radius: 5px;
       margin-top: 10px;
+    }
+
+    .primary-btn {
+      background-color: #2d85ff;
+      color: white;
+    }
+
+    .sample-btn {
+      background-color: #aaa;
+      color: white;
     }
 
     #results-section {
@@ -96,16 +104,58 @@
   <div id="container">
     <!-- Column 1 -->
     <div class="column">
-      <!-- Add your distance groups (same as before) -->
+      <div class="distance-group" data-distance="1.609">
+        <h4>Mile (1.609 km)</h4>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+      </div>
+
+      <div class="distance-group" data-distance="10">
+        <h4>10K</h4>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+      </div>
+
+      <div class="distance-group" data-distance="42.195">
+        <h4>Marathon (42.195 km)</h4>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+      </div>
     </div>
 
     <!-- Column 2 -->
     <div class="column">
-      <!-- Add your other distance groups (same as before) -->
-      <button onclick="calculatePredictions()">Predict Times</button>
+      <div class="distance-group" data-distance="5">
+        <h4>5K</h4>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+      </div>
+
+      <div class="distance-group" data-distance="21.095">
+        <h4>Half Marathon (21.095 km)</h4>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text"><input type="date"></div>
+      </div>
+
+      <div class="distance-group" data-distance="custom">
+        <h4>Other Distance</h4>
+        <div class="time-row"><input type="number" step="0.001"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="number" step="0.001"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="number" step="0.001"><input type="text"><input type="date"></div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; gap: 10px;">
+        <button class="primary-btn" onclick="calculatePredictions()">Predict Times</button>
+        <button class="sample-btn" onclick="generateSampleData()">Sample Data</button>
+      </div>
     </div>
 
-    <!-- Column 3: Results -->
+    <!-- Column 3 -->
     <div id="results-section">
       <h3>Predictions:</h3>
       <ul id="results"></ul>
