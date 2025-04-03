@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Riegel Predictor</title>
@@ -33,7 +34,7 @@
       background: white;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     .distance-group h4 {
@@ -68,7 +69,7 @@
       background: white;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       flex: 1;
     }
 
@@ -90,6 +91,7 @@
     }
   </style>
 </head>
+
 <body>
   <h1>🏃 Riegel Race Predictor</h1>
 
@@ -154,6 +156,7 @@
       </div>
 
       <button onclick="calculatePredictions()">Predict Times</button>
+      <button onclick="generateSampleData()">Generate Sample Data</button>
     </div>
 
     <!-- Column 3: Results -->
@@ -163,6 +166,25 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    function calculatePredictions() {
+      // Your existing calculatePredictions logic here
+    }
+
+    function generateSampleData() {
+      const timeInputs = document.querySelectorAll('input[type="text"]');
+      const dateInputs = document.querySelectorAll('input[type="date"]');
+
+      // Generate sample time in hh:mm:ss format
+      const sampleTime = "00:45:00"; // You can modify this as needed
+
+      // Generate sample date in YYYY-MM-DD format
+      const sampleDate = new Date().toISOString().split('T')[0];
+
+      timeInputs.forEach(input => input.value = sampleTime);
+      dateInputs.forEach(input => input.value = sampleDate);
+    }
+  </script>
 </body>
+
 </html>
