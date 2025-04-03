@@ -3,13 +3,9 @@ function parseDuration(duration) {
   const parts = duration.trim().split(":").map(Number);
   if (parts.some(isNaN)) return null;
 
-  if (parts.length === 3) {
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  } else if (parts.length === 2) {
-    return parts[0] * 60 + parts[1];
-  } else {
-    return null;
-  }
+  if (parts.length === 3) return parts[0] * 60 + parts[1] + parts[2] / 60;
+  if (parts.length === 2) return parts[0] + parts[1] / 60;
+  return null;
 }
 
 function riegel(time, fromDist, toDist) {
@@ -39,72 +35,58 @@ function calculatePredictions() {
 
   document.querySelectorAll(".distance-group").forEach(group => {
     const distAttr = group.getAttribute("data-distance");
-    if (distAttr === "custom") return;
-
-    const dist = parseFloat(distAttr);
     const inputs = group.querySelectorAll("input");
     let timesWithDates = [];
 
-    for (let i = 0; i < inputs.length; i += 2) {
-      const timeStr = inputs[i].value.trim();
-      const dateStr = inputs[i + 1].value;
-      const time = parseDuration(timeStr);
-      const date = dateStr || null;
-      if (time) {
-        timesWithDates.push({ time: time / 60, date }); // Store in minutes
+    if (distAttr === "custom") {
+      for (let i = 0; i < inputs.length; i += 3) {
+        const dist = parseFloat(inputs[i].value);
+        const time = parseDuration(inputs[i + 1].value.trim());
+        const date = inputs[i + 2].value || null;
+        if (dist && time) {
+          if (!userTimes[dist]) userTimes[dist] = [];
+          userTimes[dist].push({ time, date });
+        }
       }
-    }
-
-    if (timesWithDates.length > 0) {
-      userTimes[dist] = timesWithDates;
+    } else {
+      const dist = parseFloat(distAttr);
+      for (let i = 0; i < inputs.length; i += 2) {
+        const time = parseDuration(inputs[i].value.trim());
+        const date = inputs[i + 1].value || null;
+        if (time) {
+          if (!userTimes[dist]) userTimes[dist] = [];
+          userTimes[dist].push({ time, date });
+        }
+      }
     }
   });
 
-  const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
-  if (customGroup) {
-    const inputs = customGroup.querySelectorAll("input");
-    for (let i = 0; i < inputs.length; i += 3) {
-      const dist = parseFloat(inputs[i].value);
-      const timeStr = inputs[i + 1].value.trim();
-      const dateStr = inputs[i + 2].value;
-      const time = parseDuration(timeStr);
-      const date = dateStr || null;
-
-      if (dist && time) {
-        if (!userTimes[dist]) userTimes[dist] = [];
-        userTimes[dist].push({ time: time / 60, date }); // minutes
-      }
-    }
-  }
-
   let predictions = {};
-  distances.forEach((targetDist, idx) => {
+  distances.forEach((targetDist, i) => {
     let allPredictions = [];
-
     for (let fromDist in userTimes) {
       const from = parseFloat(fromDist);
       if (from !== targetDist) {
         userTimes[fromDist].forEach(entry => {
-          const predictedTime = riegel(entry.time, from, targetDist);
+          const pred = riegel(entry.time, from, targetDist);
           const weight = dateWeight(entry.date);
-          allPredictions.push({ value: predictedTime, weight });
+          allPredictions.push({ value: pred, weight });
         });
       }
     }
-
     if (allPredictions.length > 0) {
-      predictions[distanceNames[idx]] = weightedAverage(allPredictions);
+      predictions[distanceNames[i]] = weightedAverage(allPredictions);
     }
   });
 
   if (Object.keys(predictions).length === 0) {
-    alert("No valid predictions could be made. Please enter at least one valid time.");
+    alert("Please enter at least one valid time.");
   } else {
     displayResults(predictions, userTimes);
   }
 }
 
-function displayResults(predictions, userTimes = {}) {
+function displayResults(predictions, userTimes) {
   const resultsList = document.getElementById("results");
   resultsList.innerHTML = "";
 
@@ -116,39 +98,61 @@ function displayResults(predictions, userTimes = {}) {
     "Marathon": 42.195,
   };
 
-  for (let race in predictions) {
-    const timeMin = predictions[race];
-    const dist = distancesMap[race];
+  for (let label in predictions) {
+    const timeMin = predictions[label];
+    const dist = distancesMap[label];
     const pace = timeMin / dist;
-
-    const totalSeconds = timeMin * 60;
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = Math.round(totalSeconds % 60);
-    const timeFormatted = hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
-
+    const totalSec = Math.round(timeMin * 60);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const formatted = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`;
     const paceMin = Math.floor(pace);
     const paceSec = Math.round((pace - paceMin) * 60);
     const paceFormatted = `${paceMin}:${paceSec.toString().padStart(2, "0")} min/km`;
 
     let confidence = "—";
     const realTimes = userTimes[dist] || [];
-
     if (realTimes.length > 0) {
-      const avgError = realTimes.reduce((sum, actual) => sum + Math.abs(actual.time - timeMin), 0) / realTimes.length;
+      const avgError = realTimes.reduce((sum, r) => sum + Math.abs(r.time - timeMin), 0) / realTimes.length;
       const relativeError = avgError / timeMin;
-      const numEntries = realTimes.length;
-      const dataFactor = Math.min(numEntries, 6);
+      const dataFactor = Math.min(realTimes.length, 6);
       const penaltyFactor = 3 + (5 - dataFactor) * 0.5;
       const reliability = Math.max(0, 100 * Math.exp(-relativeError * penaltyFactor));
       confidence = `${Math.round(reliability)}%`;
     }
 
     resultsList.innerHTML += `
-      <li data-label="${race}">
-        <strong>${race}:</strong> ${timeFormatted}<br>
+      <li>
+        <strong>${label}:</strong> ${formatted}<br>
         Pace: <em>${paceFormatted}</em><br>
         Confidence: <strong>${confidence}</strong>
       </li>`;
   }
+}
+
+// 📌 Fill sample data
+function generateSampleData() {
+  const today = new Date();
+  function randomTime() {
+    return `${Math.floor(Math.random() * 2)}:${Math.floor(Math.random() * 60).toString().padStart(2, "0")}:${Math.floor(Math.random() * 60).toString().padStart(2, "0")}`;
+  }
+  function randomDate() {
+    const offset = Math.floor(Math.random() * 300);
+    const date = new Date(today - offset * 24 * 60 * 60 * 1000);
+    return date.toISOString().split("T")[0];
+  }
+
+  document.querySelectorAll(".distance-group").forEach(group => {
+    const inputs = group.querySelectorAll("input");
+    const isCustom = group.getAttribute("data-distance") === "custom";
+    let filled = 0;
+    for (let i = 0; i < inputs.length; i += isCustom ? 3 : 2) {
+      if (filled >= 2) break;
+      if (isCustom) inputs[i].value = (Math.random() * 40 + 2).toFixed(2);
+      inputs[i + (isCustom ? 1 : 0)].value = randomTime();
+      inputs[i + (isCustom ? 2 : 1)].value = randomDate();
+      filled++;
+    }
+  });
 }
