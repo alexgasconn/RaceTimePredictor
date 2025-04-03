@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Riegel Predictor</title>
   <style>
     body {
@@ -33,7 +33,7 @@
       background: white;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     .distance-group h4 {
@@ -76,7 +76,7 @@
       background: white;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       flex: 1;
     }
 
@@ -106,23 +106,20 @@
     <div class="column">
       <div class="distance-group" data-distance="1.609">
         <h4>Mile (1.609 km)</h4>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
       </div>
 
       <div class="distance-group" data-distance="10">
         <h4>10K</h4>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
       </div>
 
       <div class="distance-group" data-distance="42.195">
         <h4>Marathon (42.195 km)</h4>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
       </div>
     </div>
 
@@ -130,33 +127,39 @@
     <div class="column">
       <div class="distance-group" data-distance="5">
         <h4>5K</h4>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
       </div>
 
       <div class="distance-group" data-distance="21.095">
         <h4>Half Marathon (21.095 km)</h4>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="text"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
+        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
       </div>
 
       <div class="distance-group" data-distance="custom">
         <h4>Other Distance</h4>
-        <div class="time-row"><input type="number" step="0.001"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="number" step="0.001"><input type="text"><input type="date"></div>
-        <div class="time-row"><input type="number" step="0.001"><input type="text"><input type="date"></div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; gap: 10px;">
-        <button class="primary-btn" onclick="calculatePredictions()">Predict Times</button>
-        <button class="sample-btn" onclick="generateSampleData()">Sample Data</button>
+        <div class="time-row">
+          <input type="number" placeholder="Distance (km)" step="0.001">
+          <input type="text" placeholder="hh:mm:ss">
+          <input type="date">
+        </div>
+        <div class="time-row">
+          <input type="number" placeholder="Distance (km)" step="0.001">
+          <input type="text" placeholder="hh:mm:ss">
+          <input type="date">
+        </div>
       </div>
     </div>
 
-    <!-- Column 3 -->
+    <!-- Column 3: Results -->
     <div id="results-section">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <button class="primary-btn" onclick="calculatePredictions()">Predict Times</button>
+          <button class="sample-btn" onclick="sampleData()">Sample Data</button>
+        </div>
+      </div>
       <h3>Predictions:</h3>
       <ul id="results"></ul>
     </div>
