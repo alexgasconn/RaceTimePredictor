@@ -173,9 +173,10 @@ function predictWithML() {
     const inputs = group.querySelectorAll("input");
 
     for (let i = 0; i < inputs.length; i += 2) {
-      const time = parseDuration(inputs[i].value.trim()); // now in seconds
+      const time = parseDuration(inputs[i].value.trim()); // en segundos
       const dateStr = inputs[i + 1].value;
       const date = dateStr ? new Date(dateStr) : null;
+
       if (time && date) {
         const daysAgo = (today - date) / (1000 * 60 * 60 * 24);
         dataset.push({ distance: dist, time, daysAgo });
@@ -194,11 +195,11 @@ function predictWithML() {
   const XT = math.transpose(X);
   const XTX = math.multiply(XT, X);
   const XTy = math.multiply(XT, y);
-  const theta = math.lusolve(XTX, XTy).flat();
+  const theta = math.lusolve(XTX, XTy).flat(); // [a, b]
 
   const predictions = {};
   Object.entries(distancesMap).forEach(([label, dist]) => {
-    const predicted = dist * theta[0] + 0 * theta[1] + theta[2]; // assume today (daysAgo = 0)
+    const predicted = dist * theta[0] + 0 * theta[1]; // daysAgo = 0
     predictions[label] = predicted;
   });
 
@@ -206,6 +207,8 @@ function predictWithML() {
   const items = resultsList.querySelectorAll("li");
 
   Object.entries(predictions).forEach(([raceLabel, mlSeconds]) => {
+    if (!isFinite(mlSeconds)) return; // evitar NaN
+
     const sec = Math.round(mlSeconds);
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
