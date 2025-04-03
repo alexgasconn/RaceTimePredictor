@@ -167,80 +167,120 @@
   </div>
 
   <script>
-    function calculatePredictions() {
-  const distances = [1.609, 5, 10, 21.095, 42.195];
-  const distanceNames = ["Mile (1.609 km)", "5K", "10K", "Half Marathon", "Marathon"];
-  let userTimes = {};
+  // --- Funciones auxiliares ---
+  function parseDuration(duration) {
+    if (!duration || typeof duration !== "string") return null;
+    const parts = duration.trim().split(":").map(Number);
+    if (parts.some(isNaN)) return null;
 
-  document.querySelectorAll(".distance-group").forEach(group => {
-    const distAttr = group.getAttribute("data-distance");
-    if (distAttr === "custom") return;
-
-    const dist = parseFloat(distAttr);
-    const inputs = group.querySelectorAll("input");
-    let timesWithDates = [];
-
-    for (let i = 0; i < inputs.length; i += 2) {
-      const time = parseDuration(inputs[i].value.trim());
-      const date = inputs[i + 1].value || null;
-      if (time) timesWithDates.push({ time, date });
-    }
-
-    if (timesWithDates.length > 0) userTimes[dist] = timesWithDates;
-  });
-
-  const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
-  if (customGroup) {
-    const inputs = customGroup.querySelectorAll("input");
-    for (let i = 0; i < inputs.length; i += 3) {
-      const dist = parseFloat(inputs[i].value);
-      const time = parseDuration(inputs[i + 1].value.trim());
-      const date = inputs[i + 2].value || null;
-      if (dist && time) {
-        if (!userTimes[dist]) userTimes[dist] = [];
-        userTimes[dist].push({ time, date });
-      }
+    if (parts.length === 3) {
+      return parts[0] * 60 + parts[1] + parts[2] / 60;
+    } else if (parts.length === 2) {
+      return parts[0] + parts[1] / 60;
+    } else {
+      return null;
     }
   }
 
-  let predictions = {};
-  distances.forEach((targetDist, idx) => {
-    let allPredictions = [];
+  function riegel(time, fromDist, toDist) {
+    return time * Math.pow(toDist / fromDist, 1.06);
+  }
 
-    for (let fromDist in userTimes) {
-      const from = parseFloat(fromDist);
-      if (from !== targetDist) {
-        userTimes[fromDist].forEach(entry => {
-          const predicted = riegel(entry.time, from, targetDist);
-          const weight = dateWeight(entry.date);
-          allPredictions.push({ value: predicted, weight });
-        });
+  function dateWeight(date) {
+    if (!date) return 1;
+    const today = new Date();
+    const daysAgo = (today - new Date(date)) / (1000 * 60 * 60 * 24);
+    return 1 / (1 + daysAgo / 365);
+  }
+
+  function weightedAverage(predictions) {
+    let total = 0, totalWeight = 0;
+    predictions.forEach(p => {
+      total += p.value * p.weight;
+      totalWeight += p.weight;
+    });
+    return totalWeight > 0 ? total / totalWeight : null;
+  }
+
+  function displayResults(predictions, userTimes = {}) {
+    // Aquí va el código de displayResults que ya tienes
+  }
+
+  // --- Funciones principales ---
+  function calculatePredictions() {
+    // Aquí va el código actual de calculatePredictions que ya tienes
+    const distances = [1.609, 5, 10, 21.095, 42.195];
+    const distanceNames = ["Mile (1.609 km)", "5K", "10K", "Half Marathon", "Marathon"];
+    let userTimes = {};
+
+    document.querySelectorAll(".distance-group").forEach(group => {
+      const distAttr = group.getAttribute("data-distance");
+      if (distAttr === "custom") return;
+
+      const dist = parseFloat(distAttr);
+      const inputs = group.querySelectorAll("input");
+      let timesWithDates = [];
+
+      for (let i = 0; i < inputs.length; i += 2) {
+        const time = parseDuration(inputs[i].value.trim());
+        const date = inputs[i + 1].value || null;
+        if (time) timesWithDates.push({ time, date });
+      }
+
+      if (timesWithDates.length > 0) userTimes[dist] = timesWithDates;
+    });
+
+    const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
+    if (customGroup) {
+      const inputs = customGroup.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i += 3) {
+        const dist = parseFloat(inputs[i].value);
+        const time = parseDuration(inputs[i + 1].value.trim());
+        const date = inputs[i + 2].value || null;
+        if (dist && time) {
+          if (!userTimes[dist]) userTimes[dist] = [];
+          userTimes[dist].push({ time, date });
+        }
       }
     }
 
-    if (allPredictions.length > 0)
-      predictions[distanceNames[idx]] = weightedAverage(allPredictions);
-  });
+    let predictions = {};
+    distances.forEach((targetDist, idx) => {
+      let allPredictions = [];
 
-  displayResults(predictions, userTimes);
-}
+      for (let fromDist in userTimes) {
+        const from = parseFloat(fromDist);
+        if (from !== targetDist) {
+          userTimes[fromDist].forEach(entry => {
+            const predicted = riegel(entry.time, from, targetDist);
+            const weight = dateWeight(entry.date);
+            allPredictions.push({ value: predicted, weight });
+          });
+        }
+      }
 
-    function generateSampleData() {
-      const timeInputs = document.querySelectorAll('input[type="text"]');
-      const dateInputs = document.querySelectorAll('input[type="date"]');
+      if (allPredictions.length > 0)
+        predictions[distanceNames[idx]] = weightedAverage(allPredictions);
+    });
 
-      // Generate sample time in hh:mm:ss format
-      const sampleTime = "00:45:00"; // You can modify this as needed
+    displayResults(predictions, userTimes);
+  }
 
-      // Generate sample date in YYYY-MM-DD format
-      const sampleDate = new Date().toISOString().split('T')[0];
+  function generateSampleData() {
+    // Aquí va el código actual de generateSampleData que ya tienes
+    const timeInputs = document.querySelectorAll('input[type="text"]');
+    const dateInputs = document.querySelectorAll('input[type="date"]');
 
-      timeInputs.forEach(input => input.value = sampleTime);
-      dateInputs.forEach(input => input.value = sampleDate);
-    }
+    // Generate sample time in hh:mm:ss format
+    const sampleTime = "00:45:00"; // You can modify this as needed
 
-    
-  </script>
+    // Generate sample date in YYYY-MM-DD format
+    const sampleDate = new Date().toISOString().split('T')[0];
+
+    timeInputs.forEach(input => input.value = sampleTime);
+    dateInputs.forEach(input => input.value = sampleDate);
+  }
+</script>
 </body>
 
 </html>
