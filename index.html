@@ -156,10 +156,6 @@
       </div>
     </div>
 
-    <!-- <div style="text-align: center; margin-bottom: 20px;">
-      <button onclick="calculatePredictions()">Predict Times</button>
-      <button onclick="generateSampleData()">Generate Sample Data</button>
-    </div> -->
 
     <!-- Column 3: Results -->
     <div id="results-section">
@@ -284,33 +280,59 @@
     function generateSampleData() {
       console.log("Generate Sample Data button clicked!"); // Debugging log
 
+      // Helper function to add randomness to time
+      function randomizeTime(baseTime) {
+      const parts = baseTime.split(":").map(Number);
+      const randomSeconds = Math.floor(Math.random() * 30) - 15; // Random adjustment between -15 and +15 seconds
+      if (parts.length === 3) {
+        parts[2] += randomSeconds;
+      } else if (parts.length === 2) {
+        parts[1] += randomSeconds;
+      }
+      if (parts[2] >= 60) {
+        parts[2] -= 60;
+        parts[1] += 1;
+      } else if (parts[2] < 0) {
+        parts[2] += 60;
+        parts[1] -= 1;
+      }
+      if (parts[1] >= 60) {
+        parts[1] -= 60;
+        parts[0] += 1;
+      } else if (parts[1] < 0) {
+        parts[1] += 60;
+        parts[0] -= 1;
+      }
+      return parts.map(p => String(p).padStart(2, "0")).join(":");
+      }
+
       // Predefined sample data for distances
       const sampleData = {
-        "1.609": ["5:30", "2023-01-01"],
-        "5": ["20:00", "2023-02-01"],
-        "10": ["42:00", "2023-03-01"],
-        "21.095": ["1:35:00", "2023-04-01"],
-        "42.195": ["3:30:00", "2023-05-01"]
+      "1.609": ["5:30", "2023-01-01"],
+      "5": ["20:00", "2023-02-01"],
+      "10": ["42:00", "2023-03-01"],
+      "21.095": ["1:35:00", "2023-04-01"],
+      "42.195": ["3:30:00", "2023-05-01"]
       };
 
       // Populate predefined distances
       document.querySelectorAll(".distance-group").forEach(group => {
-        const distAttr = group.getAttribute("data-distance");
-        if (distAttr in sampleData) {
-          const inputs = group.querySelectorAll("input");
-          const [time, date] = sampleData[distAttr];
-          if (inputs[0]) inputs[0].value = time; // Time input
-          if (inputs[1]) inputs[1].value = date; // Date input
-        }
+      const distAttr = group.getAttribute("data-distance");
+      if (distAttr in sampleData) {
+        const inputs = group.querySelectorAll("input");
+        const [time, date] = sampleData[distAttr];
+        if (inputs[0]) inputs[0].value = randomizeTime(time); // Randomized time input
+        if (inputs[1]) inputs[1].value = date; // Date input
+      }
       });
 
       // Populate custom distances with random data
       const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
       if (customGroup) {
-        const inputs = customGroup.querySelectorAll("input");
-        if (inputs[0]) inputs[0].value = "15"; // Custom distance
-        if (inputs[1]) inputs[1].value = "1:10:00"; // Time
-        if (inputs[2]) inputs[2].value = "2023-06-01"; // Date
+      const inputs = customGroup.querySelectorAll("input");
+      if (inputs[0]) inputs[0].value = (15 + Math.random() * 2 - 1).toFixed(3); // Custom distance with small randomness
+      if (inputs[1]) inputs[1].value = randomizeTime("1:10:00"); // Randomized time
+      if (inputs[2]) inputs[2].value = "2023-06-01"; // Date
       }
     }
   </script>
