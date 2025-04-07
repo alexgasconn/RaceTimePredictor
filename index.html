@@ -166,6 +166,16 @@
     </div>
   </div>
 
+  <div id="fit-analysis-section" style="margin-top: 40px;">
+    <h3>📂 Analyze a .fit File</h3>
+    <input type="file" id="fitFileInput" accept=".fit">
+    <button onclick="analyzeFitFile()">Analyze .fit File</button>
+    <div id="fitResults" style="margin-top: 20px;">
+      <h4>Results:</h4>
+      <pre id="fitOutput"></pre>
+    </div>
+  </div>
+
   <!-- Include the external script -->
   <script>
     function calculatePredictions() {
@@ -334,6 +344,44 @@
       if (inputs[1]) inputs[1].value = randomizeTime("1:10:00"); // Randomized time
       if (inputs[2]) inputs[2].value = "2023-06-01"; // Date
       }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/fit-file-parser/dist/fit-parser.min.js"></script>
+  <script>
+    function analyzeFitFile() {
+      const fileInput = document.getElementById("fitFileInput");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please upload a .fit file!");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const fitParser = new FitParser({
+          force: true, // Force parsing even if there are errors
+          speedUnit: "km/h", // Convert speed to km/h
+          lengthUnit: "km", // Convert distance to kilometers
+          temperatureUnit: "celsius", // Convert temperature to Celsius
+          elapsedRecordField: true, // Include elapsed time
+          mode: "list", // Output as a list
+        });
+
+        fitParser.parse(event.target.result, function (error, data) {
+          if (error) {
+            console.error("Error parsing .fit file:", error);
+            alert("Failed to parse the .fit file. Please try again.");
+            return;
+          }
+
+          // Display the parsed data
+          const output = document.getElementById("fitOutput");
+          output.textContent = JSON.stringify(data, null, 2); // Pretty-print the JSON data
+        });
+      };
+
+      reader.readAsArrayBuffer(file);
     }
   </script>
   <script src="script.js"></script>
