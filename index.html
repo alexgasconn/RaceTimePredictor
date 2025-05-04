@@ -1,390 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <title>Race Predictor</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Race Time Predictor</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 30px;
-      background-color: #f5f5f5;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 2.2em;
-      margin-bottom: 40px;
-    }
-
-    #container {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-    }
-
-    .column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .distance-group {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .distance-group h4 {
-      margin-bottom: 10px;
-    }
-
-    .time-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-
-    .time-row input[type="text"],
-    .time-row input[type="date"],
-    .time-row input[type="number"] {
-      width: 120px;
-      padding: 5px;
-    }
-
-    button {
-      padding: 10px 20px;
-      cursor: pointer;
-      background-color: #2d85ff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-
-    #results-section {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      flex: 1;
-    }
-
-    #results-section ul {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    #results-section li {
-      margin-bottom: 16px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-    }
-
-    @media screen and (max-width: 1000px) {
-      #container {
-        flex-direction: column;
-      }
-    }
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    .section { margin-bottom: 2rem; }
+    label { display: block; margin-top: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 1.5rem; }
   </style>
 </head>
-
 <body>
-  <h1>🏃 Riegel Race Predictor</h1>
+  <h1>Race Time Predictor</h1>
 
-  <div id="container">
-    <!-- Column 1 -->
-    <div class="column">
-      <div class="distance-group" data-distance="1.609">
-        <h4>Mile (1.609 km)</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-      </div>
-
-      <div class="distance-group" data-distance="10">
-        <h4>10K</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-      </div>
-
-      <div class="distance-group" data-distance="42.195">
-        <h4>Marathon (42.195 km)</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-      </div>
-    </div>
-
-    <!-- Column 2 -->
-    <div class="column">
-      <div class="distance-group" data-distance="5">
-        <h4>5K</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-      </div>
-
-      <div class="distance-group" data-distance="21.095">
-        <h4>Half Marathon (21.095 km)</h4>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-        <div class="time-row"><input type="text" placeholder="hh:mm:ss (optional)"><input type="date"></div>
-      </div>
-
-      <div class="distance-group" data-distance="custom">
-        <h4>Other Distance</h4>
-        <div class="time-row">
-          <input type="number" placeholder="Distance (km)" step="0.001">
-          <input type="text" placeholder="hh:mm:ss">
-          <input type="date">
-        </div>
-        <div class="time-row">
-          <input type="number" placeholder="Distance (km) (optional)" step="0.001">
-          <input type="text" placeholder="hh:mm:ss (optional)">
-          <input type="date">
-        </div>
-        <div class="time-row">
-          <input type="number" placeholder="Distance (km) (optional)" step="0.001">
-          <input type="text" placeholder="hh:mm:ss (optional)">
-          <input type="date">
-        </div>
-      </div>
-    </div>
-
-
-    <!-- Column 3: Results -->
-    <div id="results-section">
-      <button onclick="calculatePredictions()">Predict Times</button>
-      <button onclick="generateSampleData()">Generate Sample Data</button>
-      <h3>Predictions:</h3>
-      <ul id="results"></ul>
-    </div>
+  <div class="section">
+    <label for="mode-selector">Select mode:</label>
+    <select id="mode-selector">
+      <option value="csv">Strava CSV</option>
+      <option value="manual">Manual Input</option>
+    </select>
   </div>
 
-  <div id="fit-analysis-section" style="margin-top: 40px;">
-    <h3>📂 Analyze a .fit File</h3>
-    <input type="file" id="fitFileInput" accept=".fit">
-    <button onclick="analyzeFitFile()">Analyze .fit File</button>
-    <div id="fitResults" style="margin-top: 20px;">
-      <h4>Results:</h4>
-      <pre id="fitOutput"></pre>
-    </div>
+  <div id="csv-upload" class="section">
+    <label for="csv-file">Upload your Strava CSV file:</label>
+    <input type="file" id="csv-file" accept=".csv" />
   </div>
 
-  <!-- Include the external script -->
-  <script>
-    function calculatePredictions() {
-      console.log("Predict Times button clicked!"); // Debugging log
+  <div id="manual-inputs" class="section" style="display: none;">
+    <h2>Manual Input</h2>
+    <p>Enter your times below (format: hh:mm:ss or mm:ss):</p>
 
-      const distances = [1.609, 5, 10, 21.095, 42.195];
-      const distanceNames = ["Mile (1.609 km)", "5K", "10K", "Half Marathon", "Marathon"];
-      let userTimes = {};
+    <div class="distance-group" data-distance="1.609">
+      <h3>Mile (1.609 km)</h3>
+      <input type="text" placeholder="Time (e.g. 6:23)" />
+      <input type="date" />
+    </div>
 
-      // Gather user input from predefined distances
-      document.querySelectorAll(".distance-group").forEach(group => {
-        const distAttr = group.getAttribute("data-distance");
-        if (distAttr === "custom") return;
+    <div class="distance-group" data-distance="5">
+      <h3>5K</h3>
+      <input type="text" placeholder="Time (e.g. 22:45)" />
+      <input type="date" />
+    </div>
 
-        const dist = parseFloat(distAttr);
-        const inputs = group.querySelectorAll("input");
-        let timesWithDates = [];
+    <div class="distance-group" data-distance="10">
+      <h3>10K</h3>
+      <input type="text" placeholder="Time (e.g. 48:00)" />
+      <input type="date" />
+    </div>
 
-        for (let i = 0; i < inputs.length; i += 2) {
-          const time = parseDuration(inputs[i].value.trim());
-          const date = inputs[i + 1].value || null;
-          if (time) timesWithDates.push({ time, date });
-        }
+    <div class="distance-group" data-distance="21.095">
+      <h3>Half Marathon</h3>
+      <input type="text" placeholder="Time (e.g. 1:45:00)" />
+      <input type="date" />
+    </div>
 
-        if (timesWithDates.length > 0) userTimes[dist] = timesWithDates;
-      });
+    <div class="distance-group" data-distance="42.195">
+      <h3>Marathon</h3>
+      <input type="text" placeholder="Time (e.g. 3:45:00)" />
+      <input type="date" />
+    </div>
 
-      // Gather user input from custom distances
-      const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
-      if (customGroup) {
-        const inputs = customGroup.querySelectorAll("input");
-        for (let i = 0; i < inputs.length; i += 3) {
-          const dist = parseFloat(inputs[i].value);
-          const time = parseDuration(inputs[i + 1].value.trim());
-          const date = inputs[i + 2].value || null;
-          if (dist && time) {
-            if (!userTimes[dist]) userTimes[dist] = [];
-            userTimes[dist].push({ time, date });
-          }
-        }
-      }
+    <div class="distance-group" data-distance="custom">
+      <h3>Custom Distance</h3>
+      <input type="number" step="0.01" placeholder="Distance (km)" />
+      <input type="text" placeholder="Time (e.g. 25:00)" />
+      <input type="date" />
+    </div>
 
-      // Calculate predictions
-      let predictions = {};
-      distances.forEach((targetDist, idx) => {
-        let allPredictions = [];
+    <button onclick="calculatePredictions()">Predict</button>
+  </div>
 
-        for (let fromDist in userTimes) {
-          const from = parseFloat(fromDist);
-          if (from !== targetDist) {
-            userTimes[fromDist].forEach(entry => {
-              const predicted = riegel(entry.time, from, targetDist);
-              const weight = dateWeight(entry.date);
-              allPredictions.push({ value: predicted, weight });
-            });
-          }
-        }
+  <div class="section">
+    <h2>Predicted Results</h2>
+    <ul id="results"></ul>
+  </div>
 
-        if (allPredictions.length > 0)
-          predictions[distanceNames[idx]] = weightedAverage(allPredictions);
-      });
-
-      // Display the results
-      displayResults(predictions, userTimes);
-    }
-
-    function parseDuration(duration) {
-      if (!duration || typeof duration !== "string") return null;
-      const parts = duration.trim().split(":").map(Number);
-      if (parts.some(isNaN)) return null;
-
-      if (parts.length === 3) {
-        return parts[0] * 60 + parts[1] + parts[2] / 60;
-      } else if (parts.length === 2) {
-        return parts[0] + parts[1] / 60;
-      } else {
-        return null;
-      }
-    }
-
-    function riegel(time, fromDist, toDist) {
-      return time * Math.pow(toDist / fromDist, 1.06);
-    }
-
-    function dateWeight(date) {
-      if (!date) return 1;
-      const today = new Date();
-      const daysAgo = (today - new Date(date)) / (1000 * 60 * 60 * 24);
-      return 1 / (1 + daysAgo / 365);
-    }
-
-    function weightedAverage(predictions) {
-      let total = 0, totalWeight = 0;
-      predictions.forEach(p => {
-        total += p.value * p.weight;
-        totalWeight += p.weight;
-      });
-      return totalWeight > 0 ? total / totalWeight : null;
-    }
-
-    function displayResults(predictions, userTimes = {}) {
-      const resultsSection = document.getElementById("results");
-      resultsSection.innerHTML = ""; // Clear previous results
-
-      for (const [distance, time] of Object.entries(predictions)) {
-        const li = document.createElement("li");
-        li.textContent = `${distance}: ${time ? time.toFixed(2) + " minutes" : "No prediction available"}`;
-        resultsSection.appendChild(li);
-      }
-    }
-
-    function generateSampleData() {
-      console.log("Generate Sample Data button clicked!"); // Debugging log
-
-      // Helper function to add randomness to time
-      function randomizeTime(baseTime) {
-      const parts = baseTime.split(":").map(Number);
-      const randomSeconds = Math.floor(Math.random() * 30) - 15; // Random adjustment between -15 and +15 seconds
-      if (parts.length === 3) {
-        parts[2] += randomSeconds;
-      } else if (parts.length === 2) {
-        parts[1] += randomSeconds;
-      }
-      if (parts[2] >= 60) {
-        parts[2] -= 60;
-        parts[1] += 1;
-      } else if (parts[2] < 0) {
-        parts[2] += 60;
-        parts[1] -= 1;
-      }
-      if (parts[1] >= 60) {
-        parts[1] -= 60;
-        parts[0] += 1;
-      } else if (parts[1] < 0) {
-        parts[1] += 60;
-        parts[0] -= 1;
-      }
-      return parts.map(p => String(p).padStart(2, "0")).join(":");
-      }
-
-      // Predefined sample data for distances
-      const sampleData = {
-      "1.609": ["5:30", "2023-01-01"],
-      "5": ["20:00", "2023-02-01"],
-      "10": ["42:00", "2023-03-01"],
-      "21.095": ["1:35:00", "2023-04-01"],
-      "42.195": ["3:30:00", "2023-05-01"]
-      };
-
-      // Populate predefined distances
-      document.querySelectorAll(".distance-group").forEach(group => {
-      const distAttr = group.getAttribute("data-distance");
-      if (distAttr in sampleData) {
-        const inputs = group.querySelectorAll("input");
-        const [time, date] = sampleData[distAttr];
-        if (inputs[0]) inputs[0].value = randomizeTime(time); // Randomized time input
-        if (inputs[1]) inputs[1].value = date; // Date input
-      }
-      });
-
-      // Populate custom distances with random data
-      const customGroup = document.querySelector('.distance-group[data-distance="custom"]');
-      if (customGroup) {
-      const inputs = customGroup.querySelectorAll("input");
-      if (inputs[0]) inputs[0].value = (15 + Math.random() * 2 - 1).toFixed(3); // Custom distance with small randomness
-      if (inputs[1]) inputs[1].value = randomizeTime("1:10:00"); // Randomized time
-      if (inputs[2]) inputs[2].value = "2023-06-01"; // Date
-      }
-    }
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/fit-file-parser/dist/fit-parser.min.js"></script>
-  <script>
-    function analyzeFitFile() {
-      const fileInput = document.getElementById("fitFileInput");
-      const file = fileInput.files[0];
-
-      if (!file) {
-        alert("Please upload a .fit file!");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const fitParser = new FitParser({
-          force: true, // Force parsing even if there are errors
-          speedUnit: "km/h", // Convert speed to km/h
-          lengthUnit: "km", // Convert distance to kilometers
-          temperatureUnit: "celsius", // Convert temperature to Celsius
-          elapsedRecordField: true, // Include elapsed time
-          mode: "list", // Output as a list
-        });
-
-        fitParser.parse(event.target.result, function (error, data) {
-          if (error) {
-            console.error("Error parsing .fit file:", error);
-            alert("Failed to parse the .fit file. Please try again.");
-            return;
-          }
-
-          // Display the parsed data
-          const output = document.getElementById("fitOutput");
-          output.textContent = JSON.stringify(data, null, 2); // Pretty-print the JSON data
-        });
-      };
-
-      reader.readAsArrayBuffer(file);
-    }
-  </script>
-  <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+  <script src="main.js"></script>
 </body>
-
 </html>
