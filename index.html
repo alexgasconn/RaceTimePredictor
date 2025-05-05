@@ -2,82 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Race Time Predictor</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    .section { margin-bottom: 2rem; }
-    label { display: block; margin-top: 1rem; }
-    ul { list-style: none; padding: 0; }
-    li { margin-bottom: 1.5rem; }
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    h1 { font-size: 2rem; }
+    .btn {
+      display: inline-block;
+      margin: 20px;
+      padding: 15px 30px;
+      font-size: 1rem;
+      text-decoration: none;
+      color: white;
+      background: #007bff;
+      border-radius: 5px;
+    }
+    .btn:visited { color: white; }
+    .btn.inactive { background: gray; pointer-events: none; }
   </style>
 </head>
 <body>
   <h1>Race Time Predictor</h1>
+  <p>Choose how you want to input your race data:</p>
 
-  <div class="section">
-    <label for="mode-selector">Select mode:</label>
-    <select id="mode-selector">
-      <option value="csv">Strava CSV</option>
-      <option value="manual">Manual Input</option>
-    </select>
-  </div>
-
-  <div id="csv-upload" class="section">
-    <label for="csv-file">Upload your Strava CSV file:</label>
-    <input type="file" id="csv-file" accept=".csv" />
-  </div>
-
-  <div id="manual-inputs" class="section" style="display: none;">
-    <h2>Manual Input</h2>
-    <p>Enter your times below (format: hh:mm:ss or mm:ss):</p>
-
-    <div class="distance-group" data-distance="1.609">
-      <h3>Mile (1.609 km)</h3>
-      <input type="text" placeholder="Time (e.g. 6:23)" />
-      <input type="date" />
-    </div>
-
-    <div class="distance-group" data-distance="5">
-      <h3>5K</h3>
-      <input type="text" placeholder="Time (e.g. 22:45)" />
-      <input type="date" />
-    </div>
-
-    <div class="distance-group" data-distance="10">
-      <h3>10K</h3>
-      <input type="text" placeholder="Time (e.g. 48:00)" />
-      <input type="date" />
-    </div>
-
-    <div class="distance-group" data-distance="21.095">
-      <h3>Half Marathon</h3>
-      <input type="text" placeholder="Time (e.g. 1:45:00)" />
-      <input type="date" />
-    </div>
-
-    <div class="distance-group" data-distance="42.195">
-      <h3>Marathon</h3>
-      <input type="text" placeholder="Time (e.g. 3:45:00)" />
-      <input type="date" />
-    </div>
-
-    <div class="distance-group" data-distance="custom">
-      <h3>Custom Distance</h3>
-      <input type="number" step="0.01" placeholder="Distance (km)" />
-      <input type="text" placeholder="Time (e.g. 25:00)" />
-      <input type="date" />
-    </div>
-
-    <button onclick="calculatePredictions()">Predict</button>
-  </div>
-
-  <div class="section">
-    <h2>Predicted Results</h2>
-    <ul id="results"></ul>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
-  <script src="main.js"></script>
+  <a href="csv.html" class="btn">📄 Strava CSV</a>
+  <a href="api.html" class="btn inactive">🔌 API (In Construction)</a>
+  <a href="manual.html" class="btn">✍️ Manual Input</a>
 </body>
 </html>
