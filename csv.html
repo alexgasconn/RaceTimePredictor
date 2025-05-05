@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Race Predictor – Strava CSV</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    h1 { text-align: center; }
+    #results li { margin-bottom: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Strava CSV Prediction</h1>
+  <p>Upload your Strava CSV file to estimate your best race times.</p>
+  <input type="file" id="csv-file" accept=".csv" />
+
+  <h2>Predicted Results</h2>
+  <ul id="results"></ul>
+
+  <p><a href="index.html">⬅️ Back to home</a></p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+  <script src="csv.js"></script>
+</body>
+</html>
