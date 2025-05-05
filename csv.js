@@ -7,17 +7,18 @@ const targetDistances = [
 ];
 
 function processStravaCSV(data) {
-  const lines = data.split("\n");
-  const header = lines[0].split(",");
+  const lines = data.split("\n").filter(l => l.trim() !== "");
+  const header = lines[0].split(",").map(h => h.trim());
   const idxType = header.indexOf("Activity Type");
   const idxDist = header.indexOf("Distance");
   const idxTime = header.indexOf("Elapsed Time");
   const idxDate = header.indexOf("Activity Date");
 
   const bestTimes = {};
+
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i].split(",");
-    if (!row[idxType] || row[idxType] !== "Run") continue;
+    if (!row[idxType] || row[idxType].trim() !== "Run") continue;
 
     const dist = parseFloat(row[idxDist]);
     const time = parseFloat(row[idxTime]);
@@ -33,6 +34,7 @@ function processStravaCSV(data) {
       }
     }
   }
+
   return bestTimes;
 }
 
@@ -46,7 +48,6 @@ function predictFromBestTimes(bestTimes) {
   const n = X.length;
   if (n < 2) return [];
 
-  // Cuadrática: y = a + b log(x) + c log(x)^2
   let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0;
   let sumY = 0, sumXY = 0, sumX2Y = 0;
 
@@ -114,7 +115,7 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
     const best = processStravaCSV(content);
     const preds = predictFromBestTimes(best);
     if (preds.length === 0) {
-      alert("Not enough valid running activities in the CSV.");
+      alert("No valid running activities found in your CSV. Ensure it's from Strava and includes 'Run' entries.");
     } else {
       displayPredictions(preds);
     }
