@@ -15,85 +15,39 @@ function parseTimeToMinutes(str) {
   return NaN;
 }
 
-function processStravaCSV(data) {
-  const lines = data.trim().split("\n").filter(line => line.trim() !== '');
-  if (lines.length < 2) return {};
-
-  const header = lines[0].split(",").map(h => h.trim());
-  const idxType = header.indexOf("Activity Type");
-  const idxDist = header.indexOf("Distance");
-  const idxTime = header.indexOf("Elapsed Time");
-  const idxDate = header.indexOf("Activity Date");
-
-  console.log("Detected columns:", { idxType, idxDist, idxTime, idxDate });
-
-  if ([idxType, idxDist, idxTime, idxDate].includes(-1)) {
-    console.error("Missing one or more required columns in CSV header.");
-    return {};
-  }
-
-  const runs = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const row = lines[i].split(",").map(cell => cell.trim());
-
-    if (row.length <= Math.max(idxType, idxDist, idxTime, idxDate)) {
-      console.warn(`Skipping malformed row at line ${i + 1}`);
-      continue;
-    }
-
-    const type = row[idxType];
-    if (type !== "Run") continue;
-
-    const distance = parseFloat(row[idxDist]);
-    const time = parseTimeToMinutes(row[idxTime]);
-    const date = row[idxDate];
-
-    if (isNaN(distance) || isNaN(time)) {
-      console.warn(`Skipping invalid run at line ${i + 1}:`, row);
-      continue;
-    }
-
-    runs.push({ distance, time, date });
-  }
-
-  const bestTimes = {};
-  for (const { name, km } of targetDistances) {
-    const minDist = km * 0.95;
-    const maxDist = km * 1.05;
-    const candidates = runs.filter(r => r.distance >= minDist && r.distance <= maxDist);
-    if (candidates.length === 0) continue;
-
-    const best = candidates.reduce((a, b) => a.time < b.time ? a : b);
-    bestTimes[km] = { time: best.time, date: best.date };
-  }
-
-  return bestTimes;
+function riegel(t1, d1, d2, exponent = 1.06) {
+  return t1 * Math.pow(d2 / d1, exponent);
 }
 
-function predictFromBestTimes(bestTimes) {
-  const X = [], Y = [];
-
-  for (let km in bestTimes) {
-    X.push(Math.log(parseFloat(km)));
-    Y.push(bestTimes[km].time);
+function getBestPerformances(runs) {
+  const best = {};
+  for (const { name, km } of targetDistances) {
+    const min = km * 0.95, max = km * 1.05;
+    const filtered = runs.filter(r => r.distance >= min && r.distance <= max);
+    if (filtered.length === 0) continue;
+    const bestRun = filtered.reduce((a, b) => a.time < b.time ? a : b);
+    best[km] = { name, km, time: bestRun.time, date: bestRun.date };
   }
+  return best;
+}
 
-  if (X.length < 2) return [];
+function trainMLModel(best) {
+  const X = [], Y = [];
+  Object.values(best).forEach(({ km, time }) => {
+    X.push(Math.log(km));
+    Y.push(time);
+  });
 
   const n = X.length;
+  if (n < 2) return null;
+
   let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0;
   let sumY = 0, sumXY = 0, sumX2Y = 0;
 
   for (let i = 0; i < n; i++) {
     const x = X[i], x2 = x * x, y = Y[i];
-    sumX += x;
-    sumX2 += x2;
-    sumX3 += x2 * x;
-    sumX4 += x2 * x2;
-    sumY += y;
-    sumXY += x * y;
-    sumX2Y += x2 * y;
+    sumX += x; sumX2 += x2; sumX3 += x2 * x; sumX4 += x2 * x2;
+    sumY += y; sumXY += x * y; sumX2Y += x2 * y;
   }
 
   const A = [
@@ -105,91 +59,144 @@ function predictFromBestTimes(bestTimes) {
 
   let coeffs;
   try {
-    coeffs = math.lusolve(A, B).map(x => x[0]);
-  } catch (err) {
-    console.error("Matrix solving failed:", err);
-    return [];
+    coeffs = math.lusolve(A, B).map(r => r[0]);
+  } catch (e) {
+    console.error("ML model failed", e);
+    return null;
   }
 
   const [a, b, c] = coeffs;
-  const residuals = Y.map((y, i) => y - (a + b * X[i] + c * X[i] ** 2));
+
+  const residuals = Y.map((y, i) => {
+    const xi = X[i];
+    return y - (a + b * xi + c * xi ** 2);
+  });
   const stdDev = Math.sqrt(residuals.reduce((s, r) => s + r * r, 0) / n);
 
-  return targetDistances.map(({ name, km }) => {
-    const logKm = Math.log(km);
-    const pred = a + b * logKm + c * logKm * logKm;
-    return {
-      name,
-      minutes: pred,
-      lower: pred - 1.96 * stdDev,
-      upper: pred + 1.96 * stdDev
-    };
-  });
+  return { a, b, c, stdDev };
 }
 
-function displayPredictions(preds) {
-  const list = document.getElementById("results");
-  list.innerHTML = "";
-  preds.forEach(({ name, minutes, lower, upper }) => {
-    const totalSec = Math.round(minutes * 60);
-    const pace = minutes / targetDistances.find(d => d.name === name).km;
+function predictAll(best, model) {
+  const results = [];
+
+  for (const { name, km } of targetDistances) {
+    const riegelPreds = [];
+    Object.values(best).forEach(({ km: fromKm, time }) => {
+      if (fromKm === km) return;
+      const pred = riegel(time, fromKm, km);
+      riegelPreds.push(pred);
+    });
+
+    const avgRiegel = riegelPreds.length
+      ? riegelPreds.reduce((a, b) => a + b, 0) / riegelPreds.length
+      : null;
+
+    const logKm = Math.log(km);
+    const mlTime = model
+      ? model.a + model.b * logKm + model.c * logKm * logKm
+      : null;
+
+      const relativeFactor = km / 5; // más ancho para 10K, 21K, etc.
+      const ciLow = mlTime - 1.96 * model.stdDev * relativeFactor;
+      const ciHigh = mlTime + 1.96 * model.stdDev * relativeFactor;
+
+    // 👇 Combinación con mejor marca real si existe
+    let combined = null;
+    const values = [avgRiegel, mlTime];
+    if (best[km]) values.push(best[km].time);
+    const valid = values.filter(v => v !== null && !isNaN(v));
+    if (valid.length > 0) {
+      combined = valid.reduce((a, b) => a + b, 0) / valid.length;
+    }
+
+    if (combined !== null) {
+      let reliability = null;
+      if (best[km]) {
+        const real = best[km].time;
+        const errorPerKm = Math.abs(combined - real) / km;
+        const penalty = 0.25;
+        reliability = Math.max(0, 100 * Math.exp(-errorPerKm / penalty));
+      }
+
+      results.push({
+        name,
+        combined,
+        riegel: avgRiegel,
+        ml: mlTime,
+        bestTime: best[km]?.time || null,
+        ciLow,
+        ciHigh,
+        reliability
+      });
+      
+    }
+  }
+
+  return results;
+}
+
+
+function formatMinutes(min) {
+  const totalSec = Math.round(min * 60);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function displayPredictions(results) {
+  const ul = document.getElementById("results");
+  ul.innerHTML = "";
+
+  results.forEach(({ name, combined, ml, riegel, ciLow, ciHigh, reliability }) => {
+    const formattedPred = formatMinutes(combined);
+    const formattedLow = formatMinutes(ciLow);
+    const formattedHigh = formatMinutes(ciHigh);
+
+    const pace = combined / targetDistances.find(d => d.name === name).km;
     const paceMin = Math.floor(pace);
     const paceSec = Math.round((pace - paceMin) * 60).toString().padStart(2, "0");
 
-    const item = document.createElement("li");
-    item.innerHTML = `
-      <strong>${name}</strong>: ${Math.floor(totalSec / 60)}m ${totalSec % 60}s<br>
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>${name}</strong>: ${formattedPred}<br>
+      Estimated Range: <em>${formattedLow} ~ ${formattedHigh}</em><br>
       Pace: ${paceMin}:${paceSec} min/km<br>
-      95% CI: ${Math.round(lower)} – ${Math.round(upper)} min
+      Riegel: ${Math.round(riegel)} min<br>
+      ML: ${Math.round(ml)} min<br>
+      Confidence: <strong>${Math.round(reliability)}%</strong>
     `;
-    list.appendChild(item);
+    ul.appendChild(li);
   });
 }
 
+
 document.getElementById("csv-file").addEventListener("change", (event) => {
   const file = event.target.files[0];
-  if (!file) {
-    alert("No file selected. Please select a CSV file.");
-    return;
-  }
+  if (!file) return;
 
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
-    complete: function(results) {
-      try {
-        const parsed = results.data;
-        const runs = parsed.filter(r => r["Activity Type"] === "Run");
+    complete: function (results) {
+      const runs = results.data
+        .filter(r => r["Activity Type"] === "Run")
+        .map(r => ({
+          distance: parseFloat(r["Distance"]),
+          time: parseTimeToMinutes(r["Elapsed Time"]),
+          date: r["Activity Date"]
+        }))
+        .filter(r => !isNaN(r.distance) && !isNaN(r.time));
 
-        const cleaned = runs.map(r => {
-          return {
-            distance: parseFloat(r["Distance"]),
-            time: parseTimeToMinutes(r["Elapsed Time"]),
-            date: r["Activity Date"]
-          };
-        }).filter(r => !isNaN(r.distance) && !isNaN(r.time));
+      const best = getBestPerformances(runs);
+      const model = trainMLModel(best);
+      const preds = predictAll(best, model);
 
-        const bestTimes = {};
-        for (const { name, km } of targetDistances) {
-          const minDist = km * 0.95;
-          const maxDist = km * 1.05;
-          const candidates = cleaned.filter(r => r.distance >= minDist && r.distance <= maxDist);
-          if (candidates.length === 0) continue;
-          const best = candidates.reduce((a, b) => a.time < b.time ? a : b);
-          bestTimes[km] = { time: best.time, date: best.date };
-        }
-
-        const preds = predictFromBestTimes(bestTimes);
-        if (preds.length === 0) {
-          alert("No valid runs found.");
-        } else {
-          displayPredictions(preds);
-        }
-      } catch (err) {
-        console.error("Failed to process parsed CSV:", err);
-        alert("Something went wrong processing the file.");
+      if (!preds.length) {
+        alert("No valid predictions could be made.");
+        return;
       }
+
+      displayPredictions(preds);
     }
   });
 });
-
