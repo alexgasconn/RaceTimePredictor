@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Race Predictor – Manual Input</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    input { margin: 0.25rem 0.5rem; }
+    h1, h2 { text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>Manual Race Times Input</h1>
+  <p>Enter your past race results to predict your performance.</p>
+
+  <div class="distance-group" data-distance="1.609">
+    <h3>Mile (1.609 km)</h3>
+    <input type="text" placeholder="Time (e.g. 6:30)" />
+    <input type="date" />
+  </div>
+
+  <div class="distance-group" data-distance="5">
+    <h3>5K</h3>
+    <input type="text" placeholder="Time" />
+    <input type="date" />
+  </div>
+
+  <div class="distance-group" data-distance="10">
+    <h3>10K</h3>
+    <input type="text" placeholder="Time" />
+    <input type="date" />
+  </div>
+
+  <div class="distance-group" data-distance="21.095">
+    <h3>Half Marathon</h3>
+    <input type="text" placeholder="Time" />
+    <input type="date" />
+  </div>
+
+  <div class="distance-group" data-distance="42.195">
+    <h3>Marathon</h3>
+    <input type="text" placeholder="Time" />
+    <input type="date" />
+  </div>
+
+  <div class="distance-group" data-distance="custom">
+    <h3>Custom Distance</h3>
+    <input type="number" step="0.01" placeholder="Distance (km)" />
+    <input type="text" placeholder="Time" />
+    <input type="date" />
+  </div>
+
+  <button onclick="calculatePredictions()">Predict</button>
+
+  <h2>Predicted Results</h2>
+  <ul id="results"></ul>
+
+  <p><a href="index.html">⬅️ Back to home</a></p>
+
+  <script src="manual.js"></script>
+</body>
+</html>
