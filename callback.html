@@ -11,6 +11,8 @@
     const code = params.get("code");
 
     if (code) {
+    //   const clientId = "TU_CLIENT_ID";         // ⚠️ Sustituye por el real
+    //   const clientSecret = "TU_CLIENT_SECRET"; // ⚠️ Solo para pruebas, no producción
       const clientId = "143540";
       const clientSecret = "518b7ede285ff08227eaa9600f4ca502127e5665";
 
@@ -28,11 +30,11 @@
       .then(data => {
         const accessToken = data.access_token;
         localStorage.setItem("strava_token", accessToken);
-        document.body.innerHTML = "<p>✅ Connected! Token stored in localStorage.</p>";
+        document.body.innerHTML = "<p>✅ Connected to Strava! Token saved in localStorage.</p>";
       })
       .catch(err => {
-        document.body.innerHTML = "<p>❌ Error connecting to Strava.</p>";
         console.error(err);
+        document.body.innerHTML = "<p>❌ Error connecting to Strava.</p>";
       });
     } else {
       document.body.innerHTML = "<p>❌ Authorization failed or cancelled.</p>";
@@ -40,3 +42,4 @@
   </script>
 </body>
 </html>
+
