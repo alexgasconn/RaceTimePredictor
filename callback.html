@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Strava Redirect</title>
+</head>
+<body>
+  <h2>Connecting to Strava...</h2>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (code) {
+      const clientId = "143540";
+      const clientSecret = "518b7ede285ff08227eaa9600f4ca502127e5665";
+
+      fetch("https://www.strava.com/oauth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          code: code,
+          grant_type: "authorization_code"
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        const accessToken = data.access_token;
+        localStorage.setItem("strava_token", accessToken);
+        document.body.innerHTML = "<p>✅ Connected! Token stored in localStorage.</p>";
+      })
+      .catch(err => {
+        document.body.innerHTML = "<p>❌ Error connecting to Strava.</p>";
+        console.error(err);
+      });
+    } else {
+      document.body.innerHTML = "<p>❌ Authorization failed or cancelled.</p>";
+    }
+  </script>
+</body>
+</html>

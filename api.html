@@ -2,15 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Race Predictor – API</title>
+  <title>Connect to Strava</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 2rem; }
+    .btn { padding: 1rem 2rem; font-size: 1.1rem; background: #fc4c02; color: white; border: none; border-radius: 5px; }
   </style>
 </head>
 <body>
-  <h1>🔌 API Mode (In Construction)</h1>
-  <p>This mode will let you connect directly to your training platforms.</p>
-  <p>Coming soon...</p>
-  <a href="index.html">⬅️ Back to home</a>
+  <h1>🔌 Connect to Strava</h1>
+  <p>Authorize the app to access your activities</p>
+  <button class="btn" onclick="connectStrava()">Connect to Strava</button>
+
+  <script>
+    function connectStrava() {
+      const clientId = "143540";  // Reemplaza esto
+      const redirectUri = "https://alexgasconn.github.io/callback.html";  // Debe estar registrado en tu app Strava
+      const scope = "read,activity:read";
+
+      const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=${scope}`;
+      window.location.href = authUrl;
+    }
+  </script>
 </body>
 </html>
