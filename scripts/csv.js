@@ -168,7 +168,7 @@ function displayPredictions(results) {
       <strong>${name}</strong>: ${formattedPred}<br>
       Range: <em>${formattedLow} ~ ${formattedHigh}</em><br>
       Pace: ${paceMin}:${paceSec} min/km<br>
-      Confidence: <strong>${Math.round(reliability ?? 0)}%</strong>
+      Confidence (%): <strong>${Math.round(reliability ?? 0)}%</strong>
     `;
     ul.appendChild(li);
   });
