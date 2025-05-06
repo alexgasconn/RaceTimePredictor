@@ -67,6 +67,51 @@ function trainMLModel(best) {
   return { a, b, c, stdDev };
 }
 
+function predictForEveryKm(best, model) {
+  const results = [];
+
+  for (let km = 1; km <= 42; km++) {
+    let predictions = [];
+
+    Object.entries(best).forEach(([fromKmStr, entries]) => {
+      const fromKm = parseFloat(fromKmStr);
+      if (fromKm === km) return;
+      entries.forEach(({ time }) => {
+        const pred = riegel(time, fromKm, km);
+        const weight = 1 / Math.pow(time / fromKm, 2);
+        predictions.push({ time: pred, weight });
+      });
+    });
+
+    if (model) {
+      const logKm = Math.log(km);
+      const mlTime = model.a + model.b * logKm + model.c * logKm ** 2;
+      predictions.push({ time: mlTime, weight: 2 });
+      predictions.push({ time: mlTime + model.stdDev * (km / 5), weight: 1 });
+      predictions.push({ time: mlTime - model.stdDev * (km / 5), weight: 1 });
+    }
+
+    if (best[km]) {
+      best[km].forEach(({ time }) => predictions.push({ time, weight: 3 }));
+    }
+
+    if (predictions.length === 0) continue;
+
+    const sorted = predictions.slice().sort((a, b) => a.time - b.time);
+    const start = Math.floor(sorted.length * 0.25);
+    const end = Math.ceil(sorted.length * 0.75);
+    const trimmed = sorted.slice(start, end);
+
+    const totalWeight = trimmed.reduce((acc, p) => acc + p.weight, 0);
+    const combined = trimmed.reduce((acc, p) => acc + p.time * p.weight, 0) / totalWeight;
+
+    results.push({ km, pace: combined / km });
+  }
+
+  return results;
+}
+
+
 function predictAll(best, model) {
   const results = [];
 
@@ -168,7 +213,7 @@ function displayPredictions(results) {
   });
 }
 
-function plotPaceChart(results) {
+function plotPaceChart(results, smoothedPaceData) {
   const ctx = document.getElementById("paceChart").getContext("2d");
 
   const labels = results.map(r => r.name);
@@ -176,13 +221,16 @@ function plotPaceChart(results) {
   const minPaces = results.map(r => Math.min(...r.predictions) / r.km);
   const maxPaces = results.map(r => Math.max(...r.predictions) / r.km);
 
+  const smoothX = smoothedPaceData.map(d => d.km);
+  const smoothY = smoothedPaceData.map(d => d.pace);
+
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: labels,
       datasets: [
         {
-          label: 'Predicted Pace (min/km)',
+          label: 'Target Distances Pace',
           data: mainPaces,
           borderColor: 'blue',
           backgroundColor: 'rgba(0,0,255,0.1)',
@@ -205,22 +253,39 @@ function plotPaceChart(results) {
           backgroundColor: 'rgba(0,0,255,0.15)',
           pointRadius: 0,
           fill: '+1'
+        },
+        {
+          label: 'Smoothed Pace',
+          data: smoothY,
+          borderColor: 'orange',
+          backgroundColor: 'rgba(255,165,0,0.1)',
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+          parsing: false,
+          segment: {
+            borderDash: ctx => ctx.p0DataIndex % 2 ? [5, 5] : undefined
+          }
         }
       ]
     },
     options: {
       responsive: true,
       scales: {
+        x: {
+          title: { display: true, text: 'Distance (km)' },
+          type: 'linear',
+          min: 0,
+          max: 43
+        },
         y: {
           title: { display: true, text: 'Pace (min/km)' }
-        },
-        x: {
-          title: { display: true, text: 'Distance' }
         }
       }
     }
   });
 }
+
 
 document.getElementById("csv-file").addEventListener("change", (event) => {
   const file = event.target.files[0];
@@ -248,8 +313,10 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
         return;
       }
 
+      const preds = predictAll(best, model);
+      const smoothed = predictForEveryKm(best, model);
       displayPredictions(preds);
-      plotPaceChart(preds);
+      plotPaceChart(preds, smoothed);
     }
   });
 });
