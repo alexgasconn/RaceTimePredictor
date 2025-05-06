@@ -80,15 +80,21 @@ function predictAll(best, model) {
   const results = [];
 
   for (const { name, km } of targetDistances) {
-    const riegelPreds = [];
+    // Weighted Riegel prediction using all performances
+    let riegelWeightedSum = 0;
+    let riegelWeightSum = 0;
+
     Object.values(best).forEach(({ km: fromKm, time }) => {
       if (fromKm === km) return;
       const pred = riegel(time, fromKm, km);
-      riegelPreds.push(pred);
+      const pace = time / fromKm;
+      const weight = 1 / (pace * pace);  // better pace = higher weight
+      riegelWeightedSum += pred * weight;
+      riegelWeightSum += weight;
     });
 
-    const avgRiegel = riegelPreds.length
-      ? riegelPreds.reduce((a, b) => a + b, 0) / riegelPreds.length
+    const weightedRiegel = riegelWeightSum > 0
+      ? riegelWeightedSum / riegelWeightSum
       : null;
 
     const logKm = Math.log(km);
@@ -96,13 +102,13 @@ function predictAll(best, model) {
       ? model.a + model.b * logKm + model.c * logKm * logKm
       : null;
 
-      const relativeFactor = km / 5; // más ancho para 10K, 21K, etc.
-      const ciLow = mlTime - 1.96 * model.stdDev * relativeFactor;
-      const ciHigh = mlTime + 1.96 * model.stdDev * relativeFactor;
+    const relativeFactor = km / 5;
+    const ciLow = mlTime - 1.96 * model.stdDev * relativeFactor;
+    const ciHigh = mlTime + 1.96 * model.stdDev * relativeFactor;
 
-    // 👇 Combinación con mejor marca real si existe
+    // Combine Riegel, ML, and best real time (if exists)
     let combined = null;
-    const values = [avgRiegel, mlTime];
+    const values = [weightedRiegel, mlTime];
     if (best[km]) values.push(best[km].time);
     const valid = values.filter(v => v !== null && !isNaN(v));
     if (valid.length > 0) {
@@ -121,19 +127,19 @@ function predictAll(best, model) {
       results.push({
         name,
         combined,
-        riegel: avgRiegel,
+        riegel: weightedRiegel,
         ml: mlTime,
         bestTime: best[km]?.time || null,
         ciLow,
         ciHigh,
         reliability
       });
-      
     }
   }
 
   return results;
 }
+
 
 
 function formatMinutes(min) {
