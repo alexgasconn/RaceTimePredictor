@@ -73,19 +73,18 @@ function predictAll(best, model) {
   for (const { name, km } of targetDistances) {
     let predictions = [];
 
-    // Riegel from other distances
+    // Riegel predictions from all known performances
     Object.entries(best).forEach(([fromKmStr, entries]) => {
       const fromKm = parseFloat(fromKmStr);
       if (fromKm === km) return;
       entries.forEach(({ time }) => {
-        if (!isFinite(time)) return;
         const pred = riegel(time, fromKm, km);
         const weight = 1 / Math.pow(time / fromKm, 2);
         predictions.push({ time: pred, weight });
       });
     });
 
-    // ML prediction and +/- std
+    // ML predictions ± stddev
     if (model) {
       const logKm = Math.log(km);
       const mlTime = model.a + model.b * logKm + model.c * logKm ** 2;
@@ -94,31 +93,25 @@ function predictAll(best, model) {
       predictions.push({ time: mlTime - model.stdDev * (km / 5), weight: 1 });
     }
 
-    // Best actual times
+    // Real best times
     if (best[km]) {
-      best[km].forEach(({ time }) => {
-        if (isFinite(time)) predictions.push({ time, weight: 3 });
-      });
+      best[km].forEach(({ time }) => predictions.push({ time, weight: 3 }));
     }
 
-    if (!predictions.length) {
-      console.warn(`No predictions found for ${name}`);
-      continue;
-    }
+    if (predictions.length === 0) continue;
 
-    // Trim 25%-75% percentile range
+    // Trimmed predictions: 25th–75th percentiles
     const sorted = predictions.slice().sort((a, b) => a.time - b.time);
     const len = sorted.length;
     const start = Math.floor(len * 0.25);
     const end = Math.ceil(len * 0.75);
-    const middle = sorted.slice(start, end);
-    
-    const trimmedWeight = middle.reduce((acc, p) => acc + p.weight, 0);
-    const combined = middle.reduce((acc, p) => acc + p.time * p.weight, 0) / trimmedWeight;
-    
-    const ciLow = Math.min(...middle.map(p => p.time));
-    const ciHigh = Math.max(...middle.map(p => p.time));
+    const trimmed = sorted.slice(start, end);
 
+    const trimmedWeight = trimmed.reduce((acc, p) => acc + p.weight, 0);
+    const combined = trimmed.reduce((acc, p) => acc + p.time * p.weight, 0) / trimmedWeight;
+
+    const ciLow = Math.min(...trimmed.map(p => p.time));
+    const ciHigh = Math.max(...trimmed.map(p => p.time));
 
     let reliability = null;
     if (best[km]) {
@@ -132,7 +125,7 @@ function predictAll(best, model) {
       name,
       km,
       combined,
-      predictions: allTimes,
+      predictions: trimmed.map(p => p.time),
       ciLow,
       ciHigh,
       reliability
@@ -141,6 +134,7 @@ function predictAll(best, model) {
 
   return results;
 }
+
 
 function formatMinutes(min) {
   if (!isFinite(min)) return "–:–";
