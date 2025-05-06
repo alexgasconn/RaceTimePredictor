@@ -99,7 +99,7 @@ function predictForEveryKm(best, model) {
       });
     }
 
-    // Percentile 25–75 trimming
+    // Percentile 25–75 trimming.
     const sorted = predictions.map(p => p.time).sort((a, b) => a - b);
     const start = Math.floor(sorted.length * 0.25);
     const end = Math.ceil(sorted.length * 0.75);
