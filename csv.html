@@ -15,8 +15,16 @@
   <input type="file" id="csv-file" accept=".csv" />
 
   <h2>Predicted Results</h2>
-  <ul id="results"></ul>
-  <canvas id="paceChart" width="600" height="300" style="margin-top: 2rem;"></canvas>
+<!--   <ul id="results"></ul>
+  <canvas id="paceChart" width="600" height="300" style="margin-top: 2rem;"></canvas> -->
+
+  <div id="results-container" style="display: flex; gap: 2rem; align-items: flex-start;">
+  <!-- 🟦 Left column: Predictions -->
+  <ul id="results" style="flex: 1; list-style-type: none; padding-left: 0;"></ul>
+
+  <!-- 🟦 Right column: Chart -->
+  <canvas id="paceChart" width="400" height="300" style="flex: 1;"></canvas>
+</div>
 
   <p><a href="index.html">⬅️ Back to home</a></p>
 
