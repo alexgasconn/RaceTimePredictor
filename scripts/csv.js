@@ -169,6 +169,42 @@ function displayPredictions(results) {
   });
 }
 
+function plotPaceChart(results) {
+  const ctx = document.getElementById("paceChart").getContext("2d");
+
+  const labels = results.map(r => r.name);
+  const paces = results.map(r => 
+    r.combined / targetDistances.find(d => d.name === r.name).km
+  );
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Predicted Pace (min/km)',
+        data: paces,
+        fill: false,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.3)',
+        tension: 0.3,
+        pointRadius: 5
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          title: { display: true, text: 'Pace (min/km)' }
+        },
+        x: {
+          title: { display: true, text: 'Distance' }
+        }
+      }
+    }
+  });
+}
+
+
 
 document.getElementById("csv-file").addEventListener("change", (event) => {
   const file = event.target.files[0];
@@ -197,6 +233,8 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
       }
 
       displayPredictions(preds);
+      plotPaceChart(preds);
+
     }
   });
 });
