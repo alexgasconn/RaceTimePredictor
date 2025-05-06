@@ -312,7 +312,7 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
         alert("No valid predictions could be made.");
         return;
       }
-
+      const predictions = predictAll(best, model);
       const smoothed = predictForEveryKm(best, model);
       displayPredictions(preds);
       plotPaceChart(preds, smoothed);
