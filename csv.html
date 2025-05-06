@@ -3,10 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <title>Race Predictor – Strava CSV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: sans-serif; padding: 2rem; }
-    h1 { text-align: center; }
-    #results li { margin-bottom: 1.2rem; }
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #results-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: flex-start;
+      margin-top: 1.5rem;
+    }
+
+    #results-container > ul,
+    #results-container > canvas {
+      flex: 1 1 350px;
+    }
+
+    #results {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    #results li {
+      margin-bottom: 1.2rem;
+      background: #f7f7f7;
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (max-width: 768px) {
+      #results-container {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
@@ -15,25 +55,20 @@
   <input type="file" id="csv-file" accept=".csv" />
 
   <h2>Predicted Results</h2>
-<!--   <ul id="results"></ul>
-  <canvas id="paceChart" width="600" height="300" style="margin-top: 2rem;"></canvas> -->
 
-  <div id="results-container" style="display: flex; gap: 2rem; align-items: flex-start;">
-  <!-- 🟦 Left column: Predictions -->
-  <ul id="results" style="flex: 1; list-style-type: none; padding-left: 0;"></ul>
-
-  <!-- 🟦 Right column: Chart -->
-  <canvas id="paceChart" width="400" height="300" style="flex: 1;"></canvas>
-</div>
+  <div id="results-container">
+    <ul id="results"></ul>
+    <canvas id="paceChart" width="400" height="300"></canvas>
+  </div>
 
   <p><a href="index.html">⬅️ Back to home</a></p>
 
+  <!-- Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/strava-v3@0.1.0/dist/strava-v3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-
+  <!-- Your prediction logic -->
   <script src="scripts/csv.js"></script>
 </body>
 </html>
