@@ -159,7 +159,7 @@ function displayPredictions(results) {
     const li = document.createElement("li");
     li.innerHTML = `
       <strong>${name}</strong>: ${formattedPred}<br>
-      Estimated Range: <em>${formattedLow} ~ ${formattedHigh}</em><br>
+      Estimated Range Time: <em>${formattedLow} ~ ${formattedHigh}</em><br>
       Pace: ${paceMin}:${paceSec} min/km<br>
       Riegel: ${Math.round(riegel)} min<br>
       ML: ${Math.round(ml)} min<br>
