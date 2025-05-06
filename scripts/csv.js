@@ -26,17 +26,15 @@ function getBestPerformances(runs) {
     const filtered = runs.filter(r => r.distance >= min && r.distance <= max);
     if (filtered.length === 0) continue;
     const sorted = filtered.sort((a, b) => a.time - b.time);
-    best[km] = sorted.slice(0, 3); // top 3 performances per distance
+    best[km] = sorted.slice(0, 3).map(r => ({ ...r, km }));
   }
   return best;
 }
 
 function trainMLModel(best) {
-  const X = [], Y = [];
-  Object.values(best).flat().forEach(({ km, time }) => {
-    X.push(Math.log(km));
-    Y.push(time);
-  });
+  const flatBest = Object.values(best).flat();
+  const X = flatBest.map(r => Math.log(r.km));
+  const Y = flatBest.map(r => r.time);
 
   if (X.length < 2) return null;
 
@@ -75,18 +73,19 @@ function predictAll(best, model) {
   for (const { name, km } of targetDistances) {
     let predictions = [];
 
-    // Riegel predictions from all known performances
+    // Riegel from other distances
     Object.entries(best).forEach(([fromKmStr, entries]) => {
       const fromKm = parseFloat(fromKmStr);
       if (fromKm === km) return;
       entries.forEach(({ time }) => {
+        if (!isFinite(time)) return;
         const pred = riegel(time, fromKm, km);
         const weight = 1 / Math.pow(time / fromKm, 2);
         predictions.push({ time: pred, weight });
       });
     });
 
-    // ML predictions ± stddev
+    // ML prediction and +/- std
     if (model) {
       const logKm = Math.log(km);
       const mlTime = model.a + model.b * logKm + model.c * logKm ** 2;
@@ -95,12 +94,18 @@ function predictAll(best, model) {
       predictions.push({ time: mlTime - model.stdDev * (km / 5), weight: 1 });
     }
 
-    // Real best times
+    // Best actual times
     if (best[km]) {
-      best[km].forEach(({ time }) => predictions.push({ time, weight: 3 }));
+      best[km].forEach(({ time }) => {
+        if (isFinite(time)) predictions.push({ time, weight: 3 });
+      });
     }
 
-    // Weighted average
+    if (!predictions.length) {
+      console.warn(`No predictions found for ${name}`);
+      continue;
+    }
+
     const totalWeight = predictions.reduce((acc, p) => acc + p.weight, 0);
     const combined = predictions.reduce((acc, p) => acc + p.time * p.weight, 0) / totalWeight;
 
@@ -131,6 +136,7 @@ function predictAll(best, model) {
 }
 
 function formatMinutes(min) {
+  if (!isFinite(min)) return "–:–";
   const totalSec = Math.round(min * 60);
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
