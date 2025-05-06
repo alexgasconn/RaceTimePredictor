@@ -316,7 +316,6 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
         return;
       }
       const predictions = predictAll(best, model);
-      const smoothed = predictForEveryKm(best, model);
       console.log("Smooth predictions:", smoothed);
 
       displayPredictions(preds);
