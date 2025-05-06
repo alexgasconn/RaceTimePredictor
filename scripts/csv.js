@@ -313,7 +313,6 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
         return;
       }
 
-      const preds = predictAll(best, model);
       const smoothed = predictForEveryKm(best, model);
       displayPredictions(preds);
       plotPaceChart(preds, smoothed);
