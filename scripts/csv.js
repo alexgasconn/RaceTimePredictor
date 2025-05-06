@@ -106,12 +106,19 @@ function predictAll(best, model) {
       continue;
     }
 
-    const totalWeight = predictions.reduce((acc, p) => acc + p.weight, 0);
-    const combined = predictions.reduce((acc, p) => acc + p.time * p.weight, 0) / totalWeight;
+    // Trim 25%-75% percentile range
+    const sorted = predictions.slice().sort((a, b) => a.time - b.time);
+    const len = sorted.length;
+    const start = Math.floor(len * 0.25);
+    const end = Math.ceil(len * 0.75);
+    const middle = sorted.slice(start, end);
+    
+    const trimmedWeight = middle.reduce((acc, p) => acc + p.weight, 0);
+    const combined = middle.reduce((acc, p) => acc + p.time * p.weight, 0) / trimmedWeight;
+    
+    const ciLow = Math.min(...middle.map(p => p.time));
+    const ciHigh = Math.max(...middle.map(p => p.time));
 
-    const allTimes = predictions.map(p => p.time);
-    const ciLow = Math.min(...allTimes);
-    const ciHigh = Math.max(...allTimes);
 
     let reliability = null;
     if (best[km]) {
