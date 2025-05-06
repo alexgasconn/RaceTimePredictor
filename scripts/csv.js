@@ -25,22 +25,22 @@ function getBestPerformances(runs) {
     const min = km * 0.95, max = km * 1.05;
     const filtered = runs.filter(r => r.distance >= min && r.distance <= max);
     if (filtered.length === 0) continue;
-    const bestRun = filtered.reduce((a, b) => a.time < b.time ? a : b);
-    best[km] = { name, km, time: bestRun.time, date: bestRun.date };
+    const sorted = filtered.sort((a, b) => a.time - b.time);
+    best[km] = sorted.slice(0, 3); // top 3 performances per distance
   }
   return best;
 }
 
 function trainMLModel(best) {
   const X = [], Y = [];
-  Object.values(best).forEach(({ km, time }) => {
+  Object.values(best).flat().forEach(({ km, time }) => {
     X.push(Math.log(km));
     Y.push(time);
   });
 
-  const n = X.length;
-  if (n < 2) return null;
+  if (X.length < 2) return null;
 
+  const n = X.length;
   let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0;
   let sumY = 0, sumXY = 0, sumX2Y = 0;
 
@@ -57,14 +57,7 @@ function trainMLModel(best) {
   ];
   const B = [sumY, sumXY, sumX2Y];
 
-  let coeffs;
-  try {
-    coeffs = math.lusolve(A, B).map(r => r[0]);
-  } catch (e) {
-    console.error("ML model failed", e);
-    return null;
-  }
-
+  const coeffs = math.lusolve(A, B).map(r => r[0]);
   const [a, b, c] = coeffs;
 
   const residuals = Y.map((y, i) => {
@@ -80,67 +73,62 @@ function predictAll(best, model) {
   const results = [];
 
   for (const { name, km } of targetDistances) {
-    // Weighted Riegel prediction using all performances
-    let riegelWeightedSum = 0;
-    let riegelWeightSum = 0;
+    let predictions = [];
 
-    Object.values(best).forEach(({ km: fromKm, time }) => {
+    // Riegel predictions from all known performances
+    Object.entries(best).forEach(([fromKmStr, entries]) => {
+      const fromKm = parseFloat(fromKmStr);
       if (fromKm === km) return;
-      const pred = riegel(time, fromKm, km);
-      const pace = time / fromKm;
-      const weight = 1 / (pace * pace);  // better pace = higher weight
-      riegelWeightedSum += pred * weight;
-      riegelWeightSum += weight;
+      entries.forEach(({ time }) => {
+        const pred = riegel(time, fromKm, km);
+        const weight = 1 / Math.pow(time / fromKm, 2);
+        predictions.push({ time: pred, weight });
+      });
     });
 
-    const weightedRiegel = riegelWeightSum > 0
-      ? riegelWeightedSum / riegelWeightSum
-      : null;
-
-    const logKm = Math.log(km);
-    const mlTime = model
-      ? model.a + model.b * logKm + model.c * logKm * logKm
-      : null;
-
-    const relativeFactor = km / 5;
-    const ciLow = mlTime - 1.96 * model.stdDev * relativeFactor;
-    const ciHigh = mlTime + 1.96 * model.stdDev * relativeFactor;
-
-    // Combine Riegel, ML, and best real time (if exists)
-    let combined = null;
-    const values = [weightedRiegel, mlTime];
-    if (best[km]) values.push(best[km].time);
-    const valid = values.filter(v => v !== null && !isNaN(v));
-    if (valid.length > 0) {
-      combined = valid.reduce((a, b) => a + b, 0) / valid.length;
+    // ML predictions ± stddev
+    if (model) {
+      const logKm = Math.log(km);
+      const mlTime = model.a + model.b * logKm + model.c * logKm ** 2;
+      predictions.push({ time: mlTime, weight: 2 });
+      predictions.push({ time: mlTime + model.stdDev * (km / 5), weight: 1 });
+      predictions.push({ time: mlTime - model.stdDev * (km / 5), weight: 1 });
     }
 
-    if (combined !== null) {
-      let reliability = null;
-      if (best[km]) {
-        const real = best[km].time;
-        const errorPerKm = Math.abs(combined - real) / km;
-        const penalty = 0.25;
-        reliability = Math.max(0, 100 * Math.exp(-errorPerKm / penalty));
-      }
-
-      results.push({
-        name,
-        combined,
-        riegel: weightedRiegel,
-        ml: mlTime,
-        bestTime: best[km]?.time || null,
-        ciLow,
-        ciHigh,
-        reliability
-      });
+    // Real best times
+    if (best[km]) {
+      best[km].forEach(({ time }) => predictions.push({ time, weight: 3 }));
     }
+
+    // Weighted average
+    const totalWeight = predictions.reduce((acc, p) => acc + p.weight, 0);
+    const combined = predictions.reduce((acc, p) => acc + p.time * p.weight, 0) / totalWeight;
+
+    const allTimes = predictions.map(p => p.time);
+    const ciLow = Math.min(...allTimes);
+    const ciHigh = Math.max(...allTimes);
+
+    let reliability = null;
+    if (best[km]) {
+      const real = best[km][0].time;
+      const errorPerKm = Math.abs(combined - real) / km;
+      const penalty = 0.25;
+      reliability = Math.max(0, 100 * Math.exp(-errorPerKm / penalty));
+    }
+
+    results.push({
+      name,
+      km,
+      combined,
+      predictions: allTimes,
+      ciLow,
+      ciHigh,
+      reliability
+    });
   }
 
   return results;
 }
-
-
 
 function formatMinutes(min) {
   const totalSec = Math.round(min * 60);
@@ -153,7 +141,7 @@ function displayPredictions(results) {
   const ul = document.getElementById("results");
   ul.innerHTML = "";
 
-  results.forEach(({ name, combined, ml, riegel, ciLow, ciHigh, reliability }) => {
+  results.forEach(({ name, combined, ciLow, ciHigh, reliability }) => {
     const formattedPred = formatMinutes(combined);
     const formattedLow = formatMinutes(ciLow);
     const formattedHigh = formatMinutes(ciHigh);
@@ -165,11 +153,9 @@ function displayPredictions(results) {
     const li = document.createElement("li");
     li.innerHTML = `
       <strong>${name}</strong>: ${formattedPred}<br>
-      Estimated Range Time: <em>${formattedLow} ~ ${formattedHigh}</em><br>
+      Range: <em>${formattedLow} ~ ${formattedHigh}</em><br>
       Pace: ${paceMin}:${paceSec} min/km<br>
-      Riegel: ${Math.round(riegel)} min<br>
-      ML: ${Math.round(ml)} min<br>
-      Confidence: <strong>${Math.round(reliability)}%</strong>
+      Confidence: <strong>${Math.round(reliability ?? 0)}%</strong>
     `;
     ul.appendChild(li);
   });
@@ -179,25 +165,44 @@ function plotPaceChart(results) {
   const ctx = document.getElementById("paceChart").getContext("2d");
 
   const labels = results.map(r => r.name);
-  const paces = results.map(r => 
-    r.combined / targetDistances.find(d => d.name === r.name).km
-  );
+  const mainPaces = results.map(r => r.combined / r.km);
+  const minPaces = results.map(r => Math.min(...r.predictions) / r.km);
+  const maxPaces = results.map(r => Math.max(...r.predictions) / r.km);
 
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
-      datasets: [{
-        label: 'Predicted Pace (min/km)',
-        data: paces,
-        fill: false,
-        borderColor: 'rgba(75, 192, 192, 1)',
-        backgroundColor: 'rgba(75, 192, 192, 0.3)',
-        tension: 0.3,
-        pointRadius: 5
-      }]
+      labels,
+      datasets: [
+        {
+          label: 'Predicted Pace (min/km)',
+          data: mainPaces,
+          borderColor: 'blue',
+          backgroundColor: 'rgba(0,0,255,0.1)',
+          pointRadius: 4,
+          fill: false
+        },
+        {
+          label: 'Prediction Range',
+          data: maxPaces,
+          type: 'line',
+          borderColor: 'transparent',
+          backgroundColor: 'rgba(0,0,255,0.15)',
+          pointRadius: 0,
+          fill: '-1'
+        },
+        {
+          data: minPaces,
+          type: 'line',
+          borderColor: 'transparent',
+          backgroundColor: 'rgba(0,0,255,0.15)',
+          pointRadius: 0,
+          fill: '+1'
+        }
+      ]
     },
     options: {
+      responsive: true,
       scales: {
         y: {
           title: { display: true, text: 'Pace (min/km)' }
@@ -209,8 +214,6 @@ function plotPaceChart(results) {
     }
   });
 }
-
-
 
 document.getElementById("csv-file").addEventListener("change", (event) => {
   const file = event.target.files[0];
@@ -240,7 +243,6 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
 
       displayPredictions(preds);
       plotPaceChart(preds);
-
     }
   });
 });
