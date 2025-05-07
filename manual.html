@@ -3,10 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <title>Race Predictor – Manual Input</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: sans-serif; padding: 2rem; }
-    input { margin: 0.25rem 0.5rem; }
-    h1, h2 { text-align: center; }
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: auto;
+      background-color: #f5f5f5;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    input {
+      margin: 0.25rem 0.5rem;
+    }
+
+    button {
+      margin: 1rem auto;
+      display: block;
+      padding: 0.5rem 1.5rem;
+      cursor: pointer;
+    }
+
+    .distance-group {
+      margin-bottom: 1rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    #results-container {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2rem;
+      align-items: flex-start;
+    }
+
+    #results {
+      flex: 0 0 35%;
+      max-width: 35%;
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    #results li {
+      background: #fff;
+      margin-bottom: 1.2rem;
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    #paceChart {
+      flex: 1;
+      max-width: 65%;
+    }
+
+    @media (max-width: 768px) {
+      #results-container {
+        flex-direction: column;
+      }
+
+      #results, #paceChart {
+        max-width: 100%;
+        flex: 1 1 auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -53,10 +119,17 @@
   <button onclick="calculatePredictions()">Predict</button>
 
   <h2>Predicted Results</h2>
-  <ul id="results"></ul>
+
+  <div id="results-container">
+    <ul id="results"></ul>
+    <canvas id="paceChart" width="400" height="300"></canvas>
+  </div>
 
   <p><a href="index.html">⬅️ Back to home</a></p>
 
+  <!-- Chart.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Main logic -->
   <script src="scripts/manual.js"></script>
 </body>
 </html>
