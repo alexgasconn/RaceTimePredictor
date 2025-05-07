@@ -6,16 +6,16 @@
 </head>
 <body>
   <h2>Connecting to Strava...</h2>
+  <pre id="output"></pre>
+
   <script>
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
+    const clientId = "143540";
+    const clientSecret = "518b7ede285ff08227eaa9600f4ca502127e5665";
+    const output = document.getElementById("output");
 
     if (code) {
-    //   const clientId = "TU_CLIENT_ID";         // ⚠️ Sustituye por el real
-    //   const clientSecret = "TU_CLIENT_SECRET"; // ⚠️ Solo para pruebas, no producción
-      const clientId = "143540";
-      const clientSecret = "518b7ede285ff08227eaa9600f4ca502127e5665";
-
       fetch("https://www.strava.com/oauth/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,20 +26,34 @@
           grant_type: "authorization_code"
         })
       })
-      .then(response => response.json())
+      .then(res => res.json())
       .then(data => {
         const accessToken = data.access_token;
+        const refreshToken = data.refresh_token;
+
         localStorage.setItem("strava_token", accessToken);
-        document.body.innerHTML = "<p>✅ Connected to Strava! Token saved in localStorage.</p>";
+        localStorage.setItem("strava_refresh", refreshToken);
+
+        output.innerText = "✅ Connected. Getting activities...";
+
+        return fetch("https://www.strava.com/api/v3/athlete/activities", {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+      })
+      .then(res => res.json())
+      .then(activities => {
+        output.innerText += `\n\nFound ${activities.length} activities:\n\n`;
+        activities.forEach((act, i) => {
+          output.innerText += `${i + 1}. ${act.name} - ${(act.distance / 1000).toFixed(2)} km\n`;
+        });
       })
       .catch(err => {
         console.error(err);
-        document.body.innerHTML = "<p>❌ Error connecting to Strava.</p>";
+        output.innerText = "❌ Error connecting to Strava.";
       });
     } else {
-      document.body.innerHTML = "<p>❌ Authorization failed or cancelled.</p>";
+      output.innerText = "❌ Authorization failed or cancelled.";
     }
   </script>
 </body>
 </html>
-
