@@ -117,7 +117,8 @@ function predictForEveryKm(best, model) {
 
 
 
-function predictAll(best, model) {
+function predictAll(best, model, lowPercentile = 0.4, highPercentile = 0.6) {
+
   const results = [];
 
   for (const { name, km } of targetDistances) {
@@ -153,8 +154,8 @@ function predictAll(best, model) {
     // Trimmed predictions: 25th–75th percentiles
     const sorted = predictions.slice().sort((a, b) => a.time - b.time);
     const len = sorted.length;
-    const start = Math.floor(len * 0.25);
-    const end = Math.ceil(len * 0.75);
+    const start = Math.floor(sorted.length * lowPercentile);
+    const end = Math.ceil(sorted.length * highPercentile);
     const trimmed = sorted.slice(start, end);
 
     const trimmedWeight = trimmed.reduce((acc, p) => acc + p.weight, 0);
@@ -321,8 +322,12 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
 
       const best = getBestPerformances(runs);
       const model = trainMLModel(best);
-      const preds = predictAll(best, model);
-      const smoothed = predictForEveryKm(best, model);
+      const rangeStr = document.getElementById("percentile-range").value;
+      const [lowP, highP] = rangeStr.split("-").map(parseFloat);
+
+      const preds = predictAll(best, model, lowP, highP);
+      const smoothed = predictForEveryKm(best, model, lowP, highP);
+
 
       
       if (!preds.length) {
