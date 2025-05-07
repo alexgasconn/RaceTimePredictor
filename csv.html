@@ -5,49 +5,63 @@
   <title>Race Time Predictor – Strava CSV</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 2rem;
-      max-width: 1000px;
-      margin: auto;
-    }
+  body {
+    font-family: Arial, sans-serif;
+    padding: 2rem;
+    background-color: #f5f5f5;
+    max-width: 1200px;
+    margin: auto;
+  }
 
-    h1 {
-      text-align: center;
-    }
+  h1 {
+    text-align: center;
+  }
 
+  #results-container {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-top: 2rem;
+  }
+
+  #results-container > ul {
+    flex: 0 0 35%;
+    max-width: 35%;
+    list-style-type: none;
+    padding-left: 0;
+  }
+
+  #results-container > canvas {
+    flex: 1;
+    max-width: 65%;
+  }
+
+  #results li {
+    margin-bottom: 1.2rem;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  select {
+    margin-top: 1rem;
+    padding: 6px;
+  }
+
+  @media (max-width: 768px) {
     #results-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      align-items: flex-start;
-      margin-top: 1.5rem;
+      flex-direction: column;
     }
 
     #results-container > ul,
     #results-container > canvas {
-      flex: 1 1 350px;
+      max-width: 100%;
+      flex: 1 1 auto;
     }
+  }
+</style>
 
-    #results {
-      list-style-type: none;
-      padding-left: 0;
-    }
-
-    #results li {
-      margin-bottom: 1.2rem;
-      background: #f7f7f7;
-      padding: 1rem;
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    @media (max-width: 768px) {
-      #results-container {
-        flex-direction: column;
-      }
-    }
-  </style>
 </head>
 <body>
   <h1>Strava CSV Prediction</h1>
