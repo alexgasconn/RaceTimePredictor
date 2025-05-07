@@ -261,13 +261,14 @@ function plotPaceChart(results, smoothedPaceData) {
         },
         {
           label: 'Smoothed Pace',
-          data: smoothedPaces,
+          data: smoothedPaceData.map(d => ({ x: d.km, y: d.time / d.km })), // ✅ Formato correcto
           borderColor: 'orange',
           backgroundColor: 'rgba(255,165,0,0.1)',
           pointRadius: 0,
           tension: 0.3,
           fill: false
         }
+
       ]
     },
     options: {
