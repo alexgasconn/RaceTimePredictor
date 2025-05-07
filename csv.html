@@ -55,6 +55,13 @@
   <input type="file" id="csv-file" accept=".csv" />
 
   <h2>Predicted Results</h2>
+  <label for="percentile-range">Prediction Range:</label>
+  <select id="percentile-range">
+    <option value="0.25-0.75">25% – 75%</option>
+    <option value="0.40-0.60" selected>40% – 60%</option>
+    <option value="0.10-0.90">10% – 90%</option>
+  </select>
+
 
   <div id="results-container">
     <ul id="results"></ul>
