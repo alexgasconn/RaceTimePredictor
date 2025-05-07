@@ -231,27 +231,28 @@ function plotPaceChart(results, smoothedPaceData) {
     data: {
       datasets: [
         {
-          label: 'Prediction Range (Upper)',
+          label: 'Prediction Range',
           data: maxPaces,
           borderColor: 'transparent',
-          backgroundColor: 'rgba(0,0,255,0.15)',
+          backgroundColor: 'rgba(0, 0, 255, 0.1)',
           pointRadius: 0,
-          fill: '-1'
+          fill: '-1' // fill down to minPaces
         },
         {
           label: 'Prediction Range (Lower)',
           data: minPaces,
           borderColor: 'transparent',
-          backgroundColor: 'rgba(0,0,255,0.15)',
+          backgroundColor: 'rgba(0, 0, 255, 0.1)',
           pointRadius: 0,
           fill: '+1'
         },
         {
-          label: 'Predicted Pace',
+          label: 'Predicted Key Distances',
           data: mainPaces,
           borderColor: 'blue',
-          backgroundColor: 'rgba(0,0,255,0.1)',
-          pointRadius: 4,
+          backgroundColor: 'blue',
+          pointRadius: 5,
+          tension: 0.2,
           fill: false
         },
         {
@@ -267,6 +268,23 @@ function plotPaceChart(results, smoothedPaceData) {
     },
     options: {
       responsive: true,
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const pace = ctx.parsed.y;
+              const min = Math.floor(pace);
+              const sec = Math.round((pace - min) * 60).toString().padStart(2, "0");
+              return `${ctx.dataset.label}: ${min}:${sec} min/km`;
+            }
+          }
+        }
+      },
       scales: {
         x: {
           type: 'linear',
@@ -275,12 +293,15 @@ function plotPaceChart(results, smoothedPaceData) {
           max: 43
         },
         y: {
-          title: { display: true, text: 'Pace (min/km)' }
+          title: { display: true, text: 'Pace (min/km)' },
+          suggestedMin: 3,
+          suggestedMax: 7
         }
       }
     }
   });
 }
+
 
 
 
