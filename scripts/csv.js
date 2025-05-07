@@ -235,20 +235,20 @@ function plotPaceChart(results, smoothedPaceData) {
     data: {
       datasets: [
         {
-          label: 'Prediction Range',
-          data: maxPaces,
-          borderColor: 'transparent',
-          backgroundColor: 'rgba(0, 0, 255, 0.1)',
-          pointRadius: 0,
-          fill: '-1' // fill down to minPaces
-        },
-        {
           label: 'Prediction Range (Lower)',
           data: minPaces,
           borderColor: 'transparent',
           backgroundColor: 'rgba(0, 0, 255, 0.1)',
           pointRadius: 0,
-          fill: '+1'
+          fill: '+1'  // 🟢 Rellena hacia arriba (a la siguiente línea: maxPaces)
+        },
+        {
+          label: 'Prediction Range (Upper)',
+          data: maxPaces,
+          borderColor: 'transparent',
+          backgroundColor: 'rgba(0, 0, 255, 0.1)',
+          pointRadius: 0,
+          fill: '-1'  // 🟢 Rellena hacia abajo (a la anterior línea: minPaces)
         },
         {
           label: 'Predicted Key Distances',
@@ -269,7 +269,8 @@ function plotPaceChart(results, smoothedPaceData) {
           fill: false
         }
       ]
-    },
+    }
+    ,
     options: {
       responsive: true,
       interaction: {
