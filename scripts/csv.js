@@ -330,7 +330,7 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
       const best = getBestPerformances(runs);
       const model = trainMLModel(best);
       const preds = predictAll(best, model);
-      const smoothed = getSmoothedPacePredictions(model); // tu función que genera 1-42km
+      const smoothed = predictForEveryKm(model); // tu función que genera 1-42km
       
       if (!preds.length) {
         alert("No valid predictions could be made.");
