@@ -101,8 +101,8 @@ function predictForEveryKm(best, model) {
 
     // Percentile 25–75 trimming.
     const sorted = predictions.map(p => p.time).sort((a, b) => a - b);
-    const start = Math.floor(sorted.length * 0.25);
-    const end = Math.ceil(sorted.length * 0.75);
+    const start = Math.floor(sorted.length * 0.40);
+    const end = Math.ceil(sorted.length * 0.60);
     const central = sorted.slice(start, end);
 
     const time = central.length
@@ -257,15 +257,6 @@ function plotPaceChart(results, smoothedPaceData) {
           backgroundColor: 'blue',
           pointRadius: 5,
           tension: 0.2,
-          fill: false
-        },
-        {
-          label: 'Smoothed Pace',
-          data: smoothPoints,
-          borderColor: 'orange',
-          backgroundColor: 'rgba(255,165,0,0.1)',
-          pointRadius: 0,
-          tension: 0.3,
           fill: false
         }
       ]
