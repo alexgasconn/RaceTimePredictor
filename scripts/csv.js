@@ -221,21 +221,33 @@ function displayPredictions(results) {
 function plotPaceChart(results, smoothedPaceData) {
   const ctx = document.getElementById("paceChart").getContext("2d");
 
-  const smoothedPaces = smoothedPaceData.map(p => p.time / p.km);
-  const smoothedLabels = smoothedPaceData.map(p => p.km.toFixed(1));
-
-  const labels = results.map(r => r.name);
-  const mainPaces = results.map(r => r.combined / r.km);
-  const minPaces = results.map(r => Math.min(...r.predictions) / r.km);
-  const maxPaces = results.map(r => Math.max(...r.predictions) / r.km);
+  const mainPaces = results.map(r => ({ x: r.km, y: r.combined / r.km }));
+  const minPaces = results.map(r => ({ x: r.km, y: Math.min(...r.predictions) / r.km }));
+  const maxPaces = results.map(r => ({ x: r.km, y: Math.max(...r.predictions) / r.km }));
+  const smoothPoints = smoothedPaceData.map(d => ({ x: d.km, y: d.time / d.km }));
 
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
       datasets: [
         {
-          label: 'Target Distances Pace',
+          label: 'Prediction Range (Upper)',
+          data: maxPaces,
+          borderColor: 'transparent',
+          backgroundColor: 'rgba(0,0,255,0.15)',
+          pointRadius: 0,
+          fill: '-1'
+        },
+        {
+          label: 'Prediction Range (Lower)',
+          data: minPaces,
+          borderColor: 'transparent',
+          backgroundColor: 'rgba(0,0,255,0.15)',
+          pointRadius: 0,
+          fill: '+1'
+        },
+        {
+          label: 'Predicted Pace',
           data: mainPaces,
           borderColor: 'blue',
           backgroundColor: 'rgba(0,0,255,0.1)',
@@ -243,40 +255,22 @@ function plotPaceChart(results, smoothedPaceData) {
           fill: false
         },
         {
-          label: 'Prediction Range',
-          data: maxPaces,
-          type: 'line',
-          borderColor: 'transparent',
-          backgroundColor: 'rgba(0,0,255,0.15)',
-          pointRadius: 0,
-          fill: '-1'
-        },
-        {
-          data: minPaces,
-          type: 'line',
-          borderColor: 'transparent',
-          backgroundColor: 'rgba(0,0,255,0.15)',
-          pointRadius: 0,
-          fill: '+1'
-        },
-        {
           label: 'Smoothed Pace',
-          data: smoothedPaceData.map(d => ({ x: d.km, y: d.time / d.km })), // ✅ Formato correcto
+          data: smoothPoints,
           borderColor: 'orange',
           backgroundColor: 'rgba(255,165,0,0.1)',
           pointRadius: 0,
           tension: 0.3,
           fill: false
         }
-
       ]
     },
     options: {
       responsive: true,
       scales: {
         x: {
-          title: { display: true, text: 'Distance (km)' },
           type: 'linear',
+          title: { display: true, text: 'Distance (km)' },
           min: 0,
           max: 43
         },
@@ -287,6 +281,7 @@ function plotPaceChart(results, smoothedPaceData) {
     }
   });
 }
+
 
 
 
@@ -310,17 +305,16 @@ document.getElementById("csv-file").addEventListener("change", (event) => {
       const best = getBestPerformances(runs);
       const model = trainMLModel(best);
       const preds = predictAll(best, model);
-      const smoothed = predictForEveryKm(best, model);
-
+      const smoothed = getSmoothedPacePredictions(model); // tu función que genera 1-42km
+      
       if (!preds.length) {
         alert("No valid predictions could be made.");
         return;
       }
-      const predictions = predictAll(best, model);
-      console.log("Smooth predictions:", smoothed);
-
+      
       displayPredictions(preds);
       plotPaceChart(preds, smoothed);
+
     }
   });
 });
