@@ -221,10 +221,14 @@ function displayPredictions(results) {
 function plotPaceChart(results, smoothedPaceData) {
   const ctx = document.getElementById("paceChart").getContext("2d");
 
-  const mainPaces = results.map(r => ({ x: r.km, y: r.combined / r.km }));
-  const minPaces = results.map(r => ({ x: r.km, y: Math.min(...r.predictions) / r.km }));
-  const maxPaces = results.map(r => ({ x: r.km, y: Math.max(...r.predictions) / r.km }));
+  // 🔵 Filtramos solo predicciones válidas
+  const validResults = results.filter(r => r.combined && r.predictions && r.predictions.length);
+
+  const mainPaces = validResults.map(r => ({ x: r.km, y: r.combined / r.km }));
+  const minPaces = validResults.map(r => ({ x: r.km, y: Math.min(...r.predictions) / r.km }));
+  const maxPaces = validResults.map(r => ({ x: r.km, y: Math.max(...r.predictions) / r.km }));
   const smoothPoints = smoothedPaceData.map(d => ({ x: d.km, y: d.time / d.km }));
+
 
   new Chart(ctx, {
     type: 'line',
