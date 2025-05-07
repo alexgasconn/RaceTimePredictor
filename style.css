@@ -2,7 +2,7 @@ body {
     font-family: Arial, sans-serif;
     padding: 30px;
     background-color: #f5f5f5;
-    max-width: 600px;
+    max-width: 1200px;
     margin: auto;
 }
 
@@ -33,3 +33,33 @@ button {
 li {
     margin-bottom: 6px;
 }
+#results-container {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-top: 2rem;
+}
+
+#results-container > ul {
+    flex: 0 0 35%;
+    max-width: 35%;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#results-container > canvas {
+    flex: 1;
+    max-width: 65%;
+}
+@media (max-width: 768px) {
+    #results-container {
+        flex-direction: column;
+    }
+
+    #results-container > ul,
+    #results-container > canvas {
+        max-width: 100%;
+        flex: 1 1 auto;
+    }
+}
+
